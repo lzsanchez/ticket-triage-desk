@@ -192,7 +192,7 @@ const SPECS: Spec[] = [
     tecnicoId: "luciano",
     abertoDiasAtras: 200,
     updateDiasAtras: 50,
-    status: "aguardando_gestor",
+    status: "aguardando_terceiro",
     prioridade: "alta",
   },
   {
@@ -519,7 +519,7 @@ const SPECS: Spec[] = [
     tecnicoId: "priscila",
     abertoDiasAtras: 100,
     updateDiasAtras: 20,
-    status: "aguardando_gestor",
+    status: "aguardando_terceiro",
     prioridade: "alta",
   },
 
