@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import type { Chamado, Projeto, Prioridade } from "@/types";
+import type { Chamado, Projeto, Prioridade, StatusInterno } from "@/types";
 import { mockChamados } from "@/data/mockChamados";
 import { mockProjetos } from "@/data/mockProjetos";
 
@@ -8,6 +8,7 @@ type DataContextValue = {
   projetos: Projeto[];
   atribuirTecnico: (chamadoId: string, tecnicoId: string) => void;
   setPrioridade: (chamadoId: string, prioridade: Prioridade) => void;
+  setStatus: (chamadoId: string, status: StatusInterno) => void;
   vincularProjeto: (chamadoId: string, projetoId: string) => void;
   criarProjeto: (projeto: Omit<Projeto, "id" | "dataCriacao" | "chamadosVinculados"> & { chamadoIdInicial?: string }) => Projeto;
   concluirTriagem: (chamadoId: string) => void;
@@ -35,6 +36,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setPrioridade: (chamadoId, prioridade) => {
         setChamados((prev) =>
           prev.map((c) => (c.id === chamadoId ? { ...c, prioridade } : c)),
+        );
+      },
+      setStatus: (chamadoId, status) => {
+        setChamados((prev) =>
+          prev.map((c) =>
+            c.id === chamadoId
+              ? { ...c, statusInterno: status, dataUltimaAtualizacao: new Date() }
+              : c,
+          ),
         );
       },
       vincularProjeto: (chamadoId, projetoId) => {
