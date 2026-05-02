@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useData } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import type { Chamado, TipoProjeto } from "@/types";
 
 type Props = {
@@ -23,6 +24,8 @@ type Props = {
 
 export function VincularProjetoDialog({ chamado, open, onOpenChange }: Props) {
   const { projetos, vincularProjeto, criarProjeto } = useData();
+  const { user } = useAuth();
+  const autorId = user?.id ?? "luciano";
   const [projetoSelecionado, setProjetoSelecionado] = useState<string>("");
   const [novoNome, setNovoNome] = useState("");
   const [novoTipo, setNovoTipo] = useState<TipoProjeto>("entrega_link");
@@ -34,7 +37,7 @@ export function VincularProjetoDialog({ chamado, open, onOpenChange }: Props) {
 
   function handleVincular() {
     if (!chamado || !projetoSelecionado) return;
-    vincularProjeto(chamado.id, projetoSelecionado);
+    vincularProjeto(chamado.id, projetoSelecionado, autorId);
     onOpenChange(false);
     setProjetoSelecionado("");
   }
@@ -49,6 +52,7 @@ export function VincularProjetoDialog({ chamado, open, onOpenChange }: Props) {
       prazoPrometido: null,
       observacoes: "",
       chamadoIdInicial: chamado.id,
+      autorId,
     });
     onOpenChange(false);
     setNovoNome("");

@@ -1,6 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth";
 import { DataProvider } from "@/lib/store";
+import { ChamadoModalProvider } from "@/lib/chamadoModal";
+import { ChamadoDetailsModal } from "@/components/chamado/ChamadoDetailsModal";
 
 import appCss from "../styles.css?url";
 
@@ -70,7 +72,10 @@ function RootComponent() {
   return (
     <AuthProvider>
       <DataProvider>
-        <Outlet />
+        <ChamadoModalProvider>
+          <Outlet />
+          <ChamadoDetailsModal />
+        </ChamadoModalProvider>
       </DataProvider>
     </AuthProvider>
   );

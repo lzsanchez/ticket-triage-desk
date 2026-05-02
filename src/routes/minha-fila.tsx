@@ -15,6 +15,7 @@ import { Moon, Clock } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/lib/auth";
 import { useData } from "@/lib/store";
+import { useChamadoModal } from "@/lib/chamadoModal";
 import { mockClientes } from "@/data/mockClientes";
 import { calcularAging, calcularDiasSemUpdate, cn, getStatusVisual } from "@/lib/utils";
 import type { Chamado, StatusInterno, StatusVisual } from "@/types";
@@ -154,10 +155,10 @@ function MinhaFila() {
     setActiveId(null);
     const overId = e.over?.id as StatusInterno | undefined;
     const id = e.active.id as string;
-    if (!overId) return;
+    if (!overId || !user) return;
     const chamado = chamados.find((c) => c.id === id);
     if (!chamado || chamado.statusInterno === overId) return;
-    setStatus(id, overId);
+    setStatus(id, overId, user.id);
   }
 
   function handleDragStart(e: DragStartEvent) {
@@ -265,11 +266,13 @@ function Coluna({ def, chamados }: { def: ColunaDef; chamados: Chamado[] }) {
 
 function DraggableCard({ chamado }: { chamado: Chamado }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: chamado.id });
+  const { abrir } = useChamadoModal();
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      onClick={() => abrir(chamado.id)}
       className={cn("touch-none", isDragging && "opacity-30")}
     >
       <CardChamado chamado={chamado} />
