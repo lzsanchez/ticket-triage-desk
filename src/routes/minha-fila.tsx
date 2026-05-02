@@ -157,7 +157,7 @@ function MinhaFila() {
     if (!overId) return;
     const chamado = chamados.find((c) => c.id === id);
     if (!chamado || chamado.statusInterno === overId) return;
-    setStatus(id, overId);
+    setStatus(id, overId, user.id);
   }
 
   function handleDragStart(e: DragStartEvent) {

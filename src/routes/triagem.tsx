@@ -172,6 +172,8 @@ function EmptyState({ filtrado }: { filtrado: boolean }) {
 
 function CardTriagem({ chamado, onVincular }: { chamado: Chamado; onVincular: () => void }) {
   const { atribuirTecnico, setPrioridade, concluirTriagem } = useData();
+  const { user } = useAuth();
+  const autorId = user?.id ?? "luciano";
   const cliente = mockClientes.find((c) => c.id === chamado.clienteId);
   const aging = calcularAging(chamado.dataAbertura);
   const semUpdate = calcularDiasSemUpdate(chamado.dataUltimaAtualizacao);
@@ -213,7 +215,7 @@ function CardTriagem({ chamado, onVincular }: { chamado: Chamado; onVincular: ()
       <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
         <Select
           value={chamado.tecnicoId ?? ""}
-          onValueChange={(v) => atribuirTecnico(chamado.id, v)}
+          onValueChange={(v) => atribuirTecnico(chamado.id, v, autorId)}
         >
           <SelectTrigger className="h-9 w-[180px]">
             <SelectValue placeholder="Atribuir a..." />
@@ -250,7 +252,7 @@ function CardTriagem({ chamado, onVincular }: { chamado: Chamado; onVincular: ()
             size="sm"
             className="h-9"
             disabled={!podeConcluir}
-            onClick={() => concluirTriagem(chamado.id)}
+            onClick={() => concluirTriagem(chamado.id, autorId)}
           >
             <CheckCircle2 className="h-4 w-4 mr-1.5" />
             Concluir triagem
