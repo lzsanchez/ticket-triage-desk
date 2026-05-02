@@ -221,7 +221,7 @@ function CardTriagem({ chamado, onVincular }: { chamado: Chamado; onVincular: ()
               Atualizado há {semUpdate} {semUpdate === 1 ? "dia" : "dias"}
             </span>
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
