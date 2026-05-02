@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FiltrosMultiselect } from "@/components/triagem/FiltrosMultiselect";
 import { VincularProjetoDialog } from "@/components/triagem/VincularProjetoDialog";
+import { useChamadoModal } from "@/lib/chamadoModal";
 import { CheckCircle2, Inbox, Link2, Clock, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/triagem")({
@@ -173,6 +174,7 @@ function EmptyState({ filtrado }: { filtrado: boolean }) {
 function CardTriagem({ chamado, onVincular }: { chamado: Chamado; onVincular: () => void }) {
   const { atribuirTecnico, setPrioridade, concluirTriagem } = useData();
   const { user } = useAuth();
+  const { abrir } = useChamadoModal();
   const autorId = user?.id ?? "luciano";
   const cliente = mockClientes.find((c) => c.id === chamado.clienteId);
   const aging = calcularAging(chamado.dataAbertura);
@@ -183,8 +185,14 @@ function CardTriagem({ chamado, onVincular }: { chamado: Chamado; onVincular: ()
   return (
     <article className="rounded-md border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow">
       <div className="flex items-start gap-4">
-        <div className="flex flex-col">
-          <span className="font-mono text-sm font-semibold text-primary">{chamado.id}</span>
+        <button
+          type="button"
+          onClick={() => abrir(chamado.id)}
+          className="flex flex-col items-start text-left hover:opacity-80"
+        >
+          <span className="font-mono text-sm font-semibold text-primary underline-offset-2 hover:underline">
+            {chamado.id}
+          </span>
           <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
             <Clock className="h-3 w-3" />
             {aging === 0 ? "Hoje" : `${aging}d`}
