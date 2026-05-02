@@ -15,6 +15,7 @@ import { Moon, Clock } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/lib/auth";
 import { useData } from "@/lib/store";
+import { useChamadoModal } from "@/lib/chamadoModal";
 import { mockClientes } from "@/data/mockClientes";
 import { calcularAging, calcularDiasSemUpdate, cn, getStatusVisual } from "@/lib/utils";
 import type { Chamado, StatusInterno, StatusVisual } from "@/types";
