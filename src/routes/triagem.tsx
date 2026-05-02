@@ -197,9 +197,13 @@ function CardTriagem({ chamado, onVincular }: { chamado: Chamado; onVincular: ()
             <Clock className="h-3 w-3" />
             {aging === 0 ? "Hoje" : `${aging}d`}
           </span>
-        </div>
+        </button>
 
-        <div className="flex-1 min-w-0">
+        <button
+          type="button"
+          onClick={() => abrir(chamado.id)}
+          className="flex-1 min-w-0 text-left"
+        >
           <h3 className="text-base font-semibold leading-tight text-foreground">{chamado.titulo}</h3>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
             <span className="font-medium text-foreground">{cliente?.nome ?? "—"}</span>
