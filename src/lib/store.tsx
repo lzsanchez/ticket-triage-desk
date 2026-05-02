@@ -76,11 +76,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     () => ({
       chamados,
       projetos,
-      atribuirTecnico: (chamadoId, tecnicoId, autorId) => {
+      atribuirTecnico: (chamadoId, tecnicoId, autorId, motivo) => {
         updateChamado(
           chamadoId,
           { tecnicoId },
-          novaMov(chamadoId, autorId, "atribuicao", `Chamado atribuído a ${tecnicoId}.`),
+          novaMov(
+            chamadoId,
+            autorId,
+            "atribuicao",
+            `Chamado atribuído a ${tecnicoId}.`,
+            motivo,
+          ),
         );
       },
       setPrioridade: (chamadoId, prioridade) => {
