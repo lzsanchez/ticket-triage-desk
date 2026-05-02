@@ -265,11 +265,13 @@ function Coluna({ def, chamados }: { def: ColunaDef; chamados: Chamado[] }) {
 
 function DraggableCard({ chamado }: { chamado: Chamado }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: chamado.id });
+  const { abrir } = useChamadoModal();
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      onClick={() => abrir(chamado.id)}
       className={cn("touch-none", isDragging && "opacity-30")}
     >
       <CardChamado chamado={chamado} />
