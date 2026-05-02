@@ -13,7 +13,7 @@ import { mockProjetos } from "@/data/mockProjetos";
 type DataContextValue = {
   chamados: Chamado[];
   projetos: Projeto[];
-  atribuirTecnico: (chamadoId: string, tecnicoId: string, autorId: string) => void;
+  atribuirTecnico: (chamadoId: string, tecnicoId: string, autorId: string, motivo?: string) => void;
   setPrioridade: (chamadoId: string, prioridade: Prioridade) => void;
   setStatus: (chamadoId: string, status: StatusInterno, autorId: string) => void;
   setSnooze: (chamadoId: string, ate: Date | null, motivo: string, autorId: string) => void;
@@ -76,11 +76,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     () => ({
       chamados,
       projetos,
-      atribuirTecnico: (chamadoId, tecnicoId, autorId) => {
+      atribuirTecnico: (chamadoId, tecnicoId, autorId, motivo) => {
         updateChamado(
           chamadoId,
           { tecnicoId },
-          novaMov(chamadoId, autorId, "atribuicao", `Chamado atribuído a ${tecnicoId}.`),
+          novaMov(
+            chamadoId,
+            autorId,
+            "atribuicao",
+            `Chamado atribuído a ${tecnicoId}.`,
+            motivo,
+          ),
         );
       },
       setPrioridade: (chamadoId, prioridade) => {
