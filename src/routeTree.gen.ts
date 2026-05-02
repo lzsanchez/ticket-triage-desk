@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TriagemRouteImport } from './routes/triagem'
+import { Route as MinhaFilaRouteImport } from './routes/minha-fila'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TriagemRoute = TriagemRouteImport.update({
   id: '/triagem',
   path: '/triagem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MinhaFilaRoute = MinhaFilaRouteImport.update({
+  id: '/minha-fila',
+  path: '/minha-fila',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/triagem'
+  fullPaths: '/' | '/minha-fila' | '/triagem'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/triagem'
-  id: '__root__' | '/' | '/triagem'
+  to: '/' | '/minha-fila' | '/triagem'
+  id: '__root__' | '/' | '/minha-fila' | '/triagem'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MinhaFilaRoute: typeof MinhaFilaRoute
   TriagemRoute: typeof TriagemRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/triagem'
       fullPath: '/triagem'
       preLoaderRoute: typeof TriagemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minha-fila': {
+      id: '/minha-fila'
+      path: '/minha-fila'
+      fullPath: '/minha-fila'
+      preLoaderRoute: typeof MinhaFilaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,17 +87,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MinhaFilaRoute: MinhaFilaRoute,
   TriagemRoute: TriagemRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
