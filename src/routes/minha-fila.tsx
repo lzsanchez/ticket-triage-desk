@@ -154,7 +154,7 @@ function MinhaFila() {
     setActiveId(null);
     const overId = e.over?.id as StatusInterno | undefined;
     const id = e.active.id as string;
-    if (!overId) return;
+    if (!overId || !user) return;
     const chamado = chamados.find((c) => c.id === id);
     if (!chamado || chamado.statusInterno === overId) return;
     setStatus(id, overId, user.id);
