@@ -23,9 +23,11 @@ type DataContextValue = {
   criarProjeto: (
     projeto: Omit<Projeto, "id" | "dataCriacao" | "chamadosVinculados"> & {
       chamadoIdInicial?: string;
+      chamadosIniciais?: string[];
       autorId?: string;
     },
   ) => Projeto;
+  moverEtapaProjeto: (projetoId: string, novaEtapa: string) => void;
   concluirTriagem: (chamadoId: string, autorId: string) => void;
 };
 
