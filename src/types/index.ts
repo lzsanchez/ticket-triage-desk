@@ -63,6 +63,35 @@ export type Chamado = {
 
 export type TipoProjeto = "entrega_link" | "cancelamento";
 
+export type FrequenciaAtualizacao =
+  | "diaria"
+  | "a_cada_2_dias"
+  | "semanal"
+  | "quinzenal"
+  | "conforme_necessario";
+
+export const ETAPAS_ENTREGA = [
+  "Solicitado",
+  "Precificação",
+  "Validação Comercial",
+  "Aguardando Viabilidade",
+  "Agendado",
+  "Instalado",
+  "Entregue",
+] as const;
+
+export const ETAPAS_CANCELAMENTO = [
+  "Solicitado",
+  "Consulta de Multa",
+  "Análise Interna",
+  "Autorização Cliente",
+  "Em Execução",
+  "Concluído",
+] as const;
+
+export type EtapaEntrega = (typeof ETAPAS_ENTREGA)[number];
+export type EtapaCancelamento = (typeof ETAPAS_CANCELAMENTO)[number];
+
 export type Projeto = {
   id: string;
   nome: string;
@@ -73,6 +102,9 @@ export type Projeto = {
   chamadosVinculados: string[];
   observacoes: string;
   dataCriacao: Date;
+  dataConclusao?: Date | null;
+  dataInstalacao?: Date | null;
+  frequenciaAtualizacao?: FrequenciaAtualizacao;
 };
 
 export type Script = {

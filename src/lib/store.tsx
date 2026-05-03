@@ -23,9 +23,11 @@ type DataContextValue = {
   criarProjeto: (
     projeto: Omit<Projeto, "id" | "dataCriacao" | "chamadosVinculados"> & {
       chamadoIdInicial?: string;
+      chamadosIniciais?: string[];
       autorId?: string;
     },
   ) => Projeto;
+  moverEtapaProjeto: (projetoId: string, novaEtapa: string) => void;
   concluirTriagem: (chamadoId: string, autorId: string) => void;
 };
 
@@ -171,27 +173,44 @@ export function DataProvider({ children }: { children: ReactNode }) {
           ),
         );
       },
-      criarProjeto: ({ chamadoIdInicial, autorId, ...dados }) => {
+      criarProjeto: ({ chamadoIdInicial, chamadosIniciais, autorId, ...dados }) => {
+        const iniciais = chamadosIniciais ?? (chamadoIdInicial ? [chamadoIdInicial] : []);
         const novo: Projeto = {
           ...dados,
           id: `proj-${Date.now()}`,
           dataCriacao: new Date(),
-          chamadosVinculados: chamadoIdInicial ? [chamadoIdInicial] : [],
+          chamadosVinculados: iniciais,
         };
         setProjetos((prev) => [...prev, novo]);
-        if (chamadoIdInicial) {
+        iniciais.forEach((cid) => {
           updateChamado(
-            chamadoIdInicial,
+            cid,
             { projetoId: novo.id },
             novaMov(
-              chamadoIdInicial,
+              cid,
               autorId ?? "luciano",
               "vinculacao_projeto",
               `Vinculado ao novo projeto "${novo.nome}".`,
             ),
           );
-        }
+        });
         return novo;
+      },
+      moverEtapaProjeto: (projetoId, novaEtapa) => {
+        setProjetos((prev) =>
+          prev.map((p) =>
+            p.id === projetoId
+              ? {
+                  ...p,
+                  etapaAtual: novaEtapa,
+                  dataConclusao:
+                    novaEtapa === "Entregue" || novaEtapa === "Concluído"
+                      ? p.dataConclusao ?? new Date()
+                      : p.dataConclusao,
+                }
+              : p,
+          ),
+        );
       },
       concluirTriagem: (chamadoId, autorId) => {
         updateChamado(
