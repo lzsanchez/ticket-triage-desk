@@ -25,7 +25,7 @@ const NAV: NavItem[] = [
   { to: "/triagem", label: "Triagem", icon: Inbox, badge: 7 },
   { to: "/minha-fila", label: "Minha Fila", icon: ListTodo, badge: 12 },
   { to: "/filas-equipe", label: "Filas da Equipe", icon: Users2, badge: 24, managerOnly: true },
-  { to: "/projetos", label: "Projetos de Entrega", icon: FolderKanban, badge: 5 },
+  { to: "/gestao-entrega", label: "Gestão de Entrega", icon: FolderKanban, badge: 5 },
   { to: "/calendario", label: "Calendário", icon: CalendarDays },
   { to: "/clientes", label: "Clientes", icon: Building2 },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, managerOnly: true },

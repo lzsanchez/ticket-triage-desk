@@ -241,7 +241,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
             {chamado.projetoId ? (
               <Info label="Projeto vinculado">
                 <Link
-                  to="/projetos"
+                  to="/gestao-entrega"
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                 >
                   <FolderKanban className="h-3.5 w-3.5" />

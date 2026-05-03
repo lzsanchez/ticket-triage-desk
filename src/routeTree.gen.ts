@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TriagemRouteImport } from './routes/triagem'
 import { Route as MinhaFilaRouteImport } from './routes/minha-fila'
+import { Route as GestaoEntregaRouteImport } from './routes/gestao-entrega'
 import { Route as FilasEquipeRouteImport } from './routes/filas-equipe'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -22,6 +23,11 @@ const TriagemRoute = TriagemRouteImport.update({
 const MinhaFilaRoute = MinhaFilaRouteImport.update({
   id: '/minha-fila',
   path: '/minha-fila',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GestaoEntregaRoute = GestaoEntregaRouteImport.update({
+  id: '/gestao-entrega',
+  path: '/gestao-entrega',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FilasEquipeRoute = FilasEquipeRouteImport.update({
@@ -38,12 +44,14 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/filas-equipe': typeof FilasEquipeRoute
+  '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/filas-equipe': typeof FilasEquipeRoute
+  '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
 }
@@ -51,20 +59,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/filas-equipe': typeof FilasEquipeRoute
+  '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/filas-equipe' | '/minha-fila' | '/triagem'
+  fullPaths:
+    | '/'
+    | '/filas-equipe'
+    | '/gestao-entrega'
+    | '/minha-fila'
+    | '/triagem'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/filas-equipe' | '/minha-fila' | '/triagem'
-  id: '__root__' | '/' | '/filas-equipe' | '/minha-fila' | '/triagem'
+  to: '/' | '/filas-equipe' | '/gestao-entrega' | '/minha-fila' | '/triagem'
+  id:
+    | '__root__'
+    | '/'
+    | '/filas-equipe'
+    | '/gestao-entrega'
+    | '/minha-fila'
+    | '/triagem'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FilasEquipeRoute: typeof FilasEquipeRoute
+  GestaoEntregaRoute: typeof GestaoEntregaRoute
   MinhaFilaRoute: typeof MinhaFilaRoute
   TriagemRoute: typeof TriagemRoute
 }
@@ -83,6 +104,13 @@ declare module '@tanstack/react-router' {
       path: '/minha-fila'
       fullPath: '/minha-fila'
       preLoaderRoute: typeof MinhaFilaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gestao-entrega': {
+      id: '/gestao-entrega'
+      path: '/gestao-entrega'
+      fullPath: '/gestao-entrega'
+      preLoaderRoute: typeof GestaoEntregaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/filas-equipe': {
@@ -105,6 +133,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FilasEquipeRoute: FilasEquipeRoute,
+  GestaoEntregaRoute: GestaoEntregaRoute,
   MinhaFilaRoute: MinhaFilaRoute,
   TriagemRoute: TriagemRoute,
 }
