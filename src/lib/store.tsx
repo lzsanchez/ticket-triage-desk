@@ -29,7 +29,12 @@ type DataContextValue = {
       autorId?: string;
     },
   ) => Projeto;
-  moverEtapaProjeto: (projetoId: string, novaEtapa: string) => void;
+  moverEtapaProjeto: (projetoId: string, novaEtapa: string, autorId?: string) => void;
+  atualizarProjeto: (projetoId: string, patch: Partial<Projeto>, autorId: string, descricao?: string) => void;
+  removerChamadoProjeto: (chamadoId: string, projetoId: string, autorId: string) => void;
+  registrarAtualizacaoProjeto: (projetoId: string, texto: string, autorId: string) => void;
+  adicionarObservacaoProjeto: (projetoId: string, texto: string, autorId: string) => void;
+  arquivarProjeto: (projetoId: string, autorId: string) => void;
   concluirTriagem: (chamadoId: string, autorId: string) => void;
 };
 
