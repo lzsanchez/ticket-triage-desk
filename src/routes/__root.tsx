@@ -75,8 +75,11 @@ function RootComponent() {
     <AuthProvider>
       <DataProvider>
         <ChamadoModalProvider>
-          <Outlet />
-          <ChamadoDetailsModal />
+          <ProjetoModalProvider>
+            <Outlet />
+            <ChamadoDetailsModal />
+            <ProjetoDetailsModal />
+          </ProjetoModalProvider>
         </ChamadoModalProvider>
       </DataProvider>
     </AuthProvider>
