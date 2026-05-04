@@ -11,6 +11,7 @@ export type Cliente = {
   id: string;
   nome: string;
   entidadeGLPI: string;
+  observacoes?: string;
 };
 
 export type TipoChamado = {

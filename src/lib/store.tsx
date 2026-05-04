@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import type {
   Chamado,
+  Cliente,
   Projeto,
   Prioridade,
   StatusInterno,
@@ -10,11 +11,15 @@ import type {
   TipoEventoProjeto,
 } from "@/types";
 import { mockChamados } from "@/data/mockChamados";
+import { mockClientes } from "@/data/mockClientes";
 import { mockProjetos } from "@/data/mockProjetos";
 
 type DataContextValue = {
   chamados: Chamado[];
+  clientes: Cliente[];
   projetos: Projeto[];
+  criarCliente: (dados: Omit<Cliente, "id">) => void;
+  atualizarCliente: (id: string, patch: Partial<Omit<Cliente, "id">>) => void;
   atribuirTecnico: (chamadoId: string, tecnicoId: string, autorId: string, motivo?: string) => void;
   setPrioridade: (chamadoId: string, prioridade: Prioridade) => void;
   setStatus: (chamadoId: string, status: StatusInterno, autorId: string) => void;
@@ -74,6 +79,7 @@ function novoEvento(
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [chamados, setChamados] = useState<Chamado[]>(mockChamados);
+  const [clientes, setClientes] = useState<Cliente[]>(mockClientes);
   const [projetos, setProjetos] = useState<Projeto[]>(
     mockProjetos.map((p) => ({
       ...p,
@@ -112,7 +118,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const value = useMemo<DataContextValue>(
     () => ({
       chamados,
+      clientes,
       projetos,
+      criarCliente: (dados) => {
+        const slug = dados.nome
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
+        const novo: Cliente = { ...dados, id: `${slug}-${Date.now()}` };
+        setClientes((prev) => [...prev, novo]);
+      },
+      atualizarCliente: (id, patch) => {
+        setClientes((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+      },
       atribuirTecnico: (chamadoId, tecnicoId, autorId, motivo) => {
         updateChamado(
           chamadoId,
@@ -380,7 +400,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         );
       },
     }),
-    [chamados, projetos, updateChamado],
+    [chamados, clientes, projetos, updateChamado],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
