@@ -57,9 +57,37 @@ function novaMov(
   };
 }
 
+function novoEvento(
+  projetoId: string,
+  autorId: string,
+  tipo: TipoEventoProjeto,
+  descricao: string,
+): EventoProjeto {
+  return {
+    id: `${projetoId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    data: new Date(),
+    usuarioId: autorId,
+    tipo,
+    descricao,
+  };
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [chamados, setChamados] = useState<Chamado[]>(mockChamados);
-  const [projetos, setProjetos] = useState<Projeto[]>(mockProjetos);
+  const [projetos, setProjetos] = useState<Projeto[]>(
+    mockProjetos.map((p) => ({
+      ...p,
+      historico: p.historico ?? [
+        {
+          id: `${p.id}-init`,
+          data: p.dataCriacao,
+          usuarioId: "luciano",
+          tipo: "criacao" as const,
+          descricao: `Projeto "${p.nome}" criado.`,
+        },
+      ],
+    })),
+  );
 
   const updateChamado = useCallback(
     (id: string, patch: Partial<Chamado>, mov?: Movimentacao) => {
