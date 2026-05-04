@@ -348,8 +348,15 @@ function ColunaEtapa({ etapa, projetos }: { etapa: string; projetos: Projeto[] }
 
 function DraggableProjeto({ projeto }: { projeto: Projeto }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: projeto.id });
+  const { abrir } = useProjetoModal();
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} className={cn("touch-none", isDragging && "opacity-30")}>
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={() => abrir(projeto.id)}
+      className={cn("touch-none cursor-pointer", isDragging && "opacity-30")}
+    >
       <CardProjeto projeto={projeto} />
     </div>
   );
