@@ -6,6 +6,8 @@ import type {
   StatusInterno,
   Movimentacao,
   TipoMovimentacao,
+  EventoProjeto,
+  TipoEventoProjeto,
 } from "@/types";
 import { mockChamados } from "@/data/mockChamados";
 import { mockProjetos } from "@/data/mockProjetos";
