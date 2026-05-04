@@ -20,6 +20,7 @@ type DataContextValue = {
   projetos: Projeto[];
   criarCliente: (dados: Omit<Cliente, "id">) => void;
   atualizarCliente: (id: string, patch: Partial<Omit<Cliente, "id">>) => void;
+  atualizarObservacoesCliente: (id: string, novoConteudo: string, autorId: string) => void;
   atribuirTecnico: (chamadoId: string, tecnicoId: string, autorId: string, motivo?: string) => void;
   setPrioridade: (chamadoId: string, prioridade: Prioridade) => void;
   setStatus: (chamadoId: string, status: StatusInterno, autorId: string) => void;
@@ -132,6 +133,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
       },
       atualizarCliente: (id, patch) => {
         setClientes((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+      },
+      atualizarObservacoesCliente: (id, novoConteudo, autorId) => {
+        setClientes((prev) =>
+          prev.map((c) => {
+            if (c.id !== id) return c;
+            const entrada = {
+              id: `obs-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              data: new Date(),
+              usuarioId: autorId,
+              conteudo: novoConteudo,
+            };
+            return {
+              ...c,
+              observacoes: novoConteudo,
+              historicoObservacoes: [...(c.historicoObservacoes ?? []), entrada],
+            };
+          }),
+        );
       },
       atribuirTecnico: (chamadoId, tecnicoId, autorId, motivo) => {
         updateChamado(
