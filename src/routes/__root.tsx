@@ -3,6 +3,8 @@ import { AuthProvider } from "@/lib/auth";
 import { DataProvider } from "@/lib/store";
 import { ChamadoModalProvider } from "@/lib/chamadoModal";
 import { ChamadoDetailsModal } from "@/components/chamado/ChamadoDetailsModal";
+import { ProjetoModalProvider } from "@/lib/projetoModal";
+import { ProjetoDetailsModal } from "@/components/gestao/ProjetoDetailsModal";
 
 import appCss from "../styles.css?url";
 
