@@ -92,6 +92,23 @@ export const ETAPAS_CANCELAMENTO = [
 export type EtapaEntrega = (typeof ETAPAS_ENTREGA)[number];
 export type EtapaCancelamento = (typeof ETAPAS_CANCELAMENTO)[number];
 
+export type TipoEventoProjeto =
+  | "criacao"
+  | "mudanca_etapa"
+  | "chamado_adicionado"
+  | "chamado_removido"
+  | "atualizacao_registrada"
+  | "observacao"
+  | "edicao";
+
+export type EventoProjeto = {
+  id: string;
+  data: Date;
+  usuarioId: string;
+  tipo: TipoEventoProjeto;
+  descricao: string;
+};
+
 export type Projeto = {
   id: string;
   nome: string;
@@ -105,6 +122,9 @@ export type Projeto = {
   dataConclusao?: Date | null;
   dataInstalacao?: Date | null;
   frequenciaAtualizacao?: FrequenciaAtualizacao;
+  ultimaAtualizacaoRegistrada?: Date | null;
+  arquivado?: boolean;
+  historico?: EventoProjeto[];
 };
 
 export type Script = {
