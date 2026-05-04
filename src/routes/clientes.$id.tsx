@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Building2,
   Check,
+  Clock,
   ExternalLink,
   Pencil,
   X,
@@ -28,11 +29,17 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
+import { useAuth } from "@/lib/auth";
 import { useData } from "@/lib/store";
+import { MOCK_USERS } from "@/lib/users";
 import { calcularAging, cn, getStatusVisual } from "@/lib/utils";
 import type { StatusVisual } from "@/types";
 
@@ -54,14 +61,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const CHART_COLORS = [
-  "#6366f1",
-  "#22c55e",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#06b6d4",
-  "#f97316",
-  "#ec4899",
+  "#6366f1", "#22c55e", "#f59e0b", "#ef4444",
+  "#8b5cf6", "#06b6d4", "#f97316", "#ec4899",
 ];
 
 function StatusBolinha({ status }: { status: StatusVisual }) {
@@ -80,10 +81,22 @@ function StatusBolinha({ status }: { status: StatusVisual }) {
 function ClienteDetalhePage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { clientes, chamados, projetos, atualizarCliente } = useData();
+  const { user } = useAuth();
+  const { clientes, chamados, projetos, atualizarCliente, atualizarObservacoesCliente } = useData();
 
+  // Editar cliente
+  const [modalEditarAberto, setModalEditarAberto] = useState(false);
+  const [editNome, setEditNome] = useState("");
+  const [editGLPI, setEditGLPI] = useState("");
+
+  // Editar observações
   const [editandoObs, setEditandoObs] = useState(false);
   const [obsRascunho, setObsRascunho] = useState("");
+
+  // Filtros da tab Chamados
+  const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [filtroTecnico, setFiltroTecnico] = useState("todos");
 
   const cliente = clientes.find((c) => c.id === id);
 
@@ -100,10 +113,9 @@ function ClienteDetalhePage() {
     [projetos, id],
   );
   const projetosAtivos = useMemo(
-    () =>
-      projetosCliente.filter(
-        (p) => !p.arquivado && p.etapaAtual !== "Entregue" && p.etapaAtual !== "Concluído",
-      ),
+    () => projetosCliente.filter(
+      (p) => !p.arquivado && p.etapaAtual !== "Entregue" && p.etapaAtual !== "Concluído",
+    ),
     [projetosCliente],
   );
 
@@ -116,15 +128,34 @@ function ClienteDetalhePage() {
   }, [chamadosAbertos]);
 
   const chamadosParados = useMemo(
-    () =>
-      chamadosAbertos.filter((c) => {
-        const dias = Math.floor(
-          (new Date().getTime() - c.dataUltimaAtualizacao.getTime()) / (1000 * 60 * 60 * 24),
-        );
-        return dias > 7;
-      }),
+    () => chamadosAbertos.filter((c) => {
+      const dias = Math.floor(
+        (new Date().getTime() - c.dataUltimaAtualizacao.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      return dias > 7;
+    }),
     [chamadosAbertos],
   );
+
+  // Opções únicas para filtros
+  const tiposUnicos = useMemo(
+    () => [...new Set(chamadosCliente.map((c) => c.tipoChamado.categoria))].sort(),
+    [chamadosCliente],
+  );
+  const tecnicosUnicos = useMemo(
+    () => [...new Set(chamadosCliente.map((c) => c.tecnicoId).filter(Boolean) as string[])],
+    [chamadosCliente],
+  );
+
+  // Chamados filtrados (tab)
+  const chamadosFiltrados = useMemo(() => {
+    return chamadosCliente.filter((c) => {
+      if (filtroStatus !== "todos" && c.statusInterno !== filtroStatus) return false;
+      if (filtroTipo !== "todos" && c.tipoChamado.categoria !== filtroTipo) return false;
+      if (filtroTecnico !== "todos" && c.tecnicoId !== filtroTecnico) return false;
+      return true;
+    });
+  }, [chamadosCliente, filtroStatus, filtroTipo, filtroTecnico]);
 
   const dadosDonut = useMemo(() => {
     const contagem = chamadosCliente.reduce<Record<string, number>>((acc, c) => {
@@ -195,8 +226,20 @@ function ClienteDetalhePage() {
     );
   }
 
+  function abrirModalEditar() {
+    setEditNome(cliente!.nome);
+    setEditGLPI(cliente!.entidadeGLPI);
+    setModalEditarAberto(true);
+  }
+
+  function salvarEdicao() {
+    if (!editNome.trim()) return;
+    atualizarCliente(id, { nome: editNome.trim(), entidadeGLPI: editGLPI.trim() });
+    setModalEditarAberto(false);
+  }
+
   function salvarObservacoes() {
-    atualizarCliente(id, { observacoes: obsRascunho });
+    atualizarObservacoesCliente(id, obsRascunho, user?.id ?? "luciano");
     setEditandoObs(false);
   }
 
@@ -205,16 +248,18 @@ function ClienteDetalhePage() {
     { label: "Chamados Abertos", valor: chamadosAbertos.length },
     { label: "Projetos Ativos", valor: projetosAtivos.length },
     { label: "Aging Médio", valor: agingMedio > 0 ? `${agingMedio}d` : "—" },
-    {
-      label: "Parados >7d",
-      valor: chamadosParados.length,
-      destaque: chamadosParados.length > 0,
-    },
+    { label: "Parados >7d", valor: chamadosParados.length, destaque: chamadosParados.length > 0 },
   ];
+
+  const nomeUsuario = (uid: string) =>
+    MOCK_USERS.find((u) => u.id === uid)?.name ?? uid;
+
+  const temFiltroAtivo =
+    filtroStatus !== "todos" || filtroTipo !== "todos" || filtroTecnico !== "todos";
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Breadcrumb / back */}
+      {/* Back */}
       <Button
         variant="ghost"
         size="sm"
@@ -234,10 +279,16 @@ function ClienteDetalhePage() {
             {cliente.entidadeGLPI}
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2 self-start">
-          <ExternalLink className="h-3.5 w-3.5" />
-          Ver no GLPI
-        </Button>
+        <div className="flex gap-2 self-start">
+          <Button variant="outline" size="sm" className="gap-2" onClick={abrirModalEditar}>
+            <Pencil className="h-3.5 w-3.5" />
+            Editar cliente
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2">
+            <ExternalLink className="h-3.5 w-3.5" />
+            Ver no GLPI
+          </Button>
+        </div>
       </div>
 
       {/* Métricas */}
@@ -277,14 +328,76 @@ function ClienteDetalhePage() {
           <TabsTrigger value="observacoes">Observações</TabsTrigger>
         </TabsList>
 
-        {/* Chamados */}
-        <TabsContent value="chamados" className="mt-4">
+        {/* Tab: Chamados */}
+        <TabsContent value="chamados" className="mt-4 flex flex-col gap-3">
+          {/* Filtros */}
+          <div className="flex flex-wrap gap-2">
+            <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+              <SelectTrigger className="w-48 h-8 text-sm">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os status</SelectItem>
+                {Object.entries(STATUS_LABEL).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+              <SelectTrigger className="w-48 h-8 text-sm">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os tipos</SelectItem>
+                {tiposUnicos.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filtroTecnico} onValueChange={setFiltroTecnico}>
+              <SelectTrigger className="w-48 h-8 text-sm">
+                <SelectValue placeholder="Técnico" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os técnicos</SelectItem>
+                <SelectItem value="sem_tecnico">Sem técnico</SelectItem>
+                {tecnicosUnicos.map((tid) => (
+                  <SelectItem key={tid} value={tid}>{nomeUsuario(tid)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {temFiltroAtivo && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 text-muted-foreground"
+                onClick={() => {
+                  setFiltroStatus("todos");
+                  setFiltroTipo("todos");
+                  setFiltroTecnico("todos");
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+                Limpar filtros
+              </Button>
+            )}
+
+            <span className="ml-auto self-center text-xs text-muted-foreground">
+              {chamadosFiltrados.length} de {chamadosCliente.length} chamado
+              {chamadosCliente.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
           <div className="rounded-lg border bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Chamado</TableHead>
                   <TableHead>Tipo</TableHead>
+                  <TableHead>Técnico</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Prioridade</TableHead>
                   <TableHead className="text-right">Aging</TableHead>
@@ -292,19 +405,26 @@ function ClienteDetalhePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {chamadosCliente.length === 0 ? (
+                {chamadosFiltrados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                      Nenhum chamado para este cliente.
+                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                      {temFiltroAtivo
+                        ? "Nenhum chamado com esses filtros."
+                        : "Nenhum chamado para este cliente."}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  chamadosCliente.map((c) => (
+                  chamadosFiltrados.map((c) => (
                     <TableRow key={c.id}>
-                      <TableCell className="font-medium max-w-xs truncate">{c.titulo}</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate">{c.titulo}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {c.tipoChamado.categoria}
                         {c.tipoChamado.subcategoria && ` / ${c.tipoChamado.subcategoria}`}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {c.tecnicoId ? nomeUsuario(c.tecnicoId) : (
+                          <span className="text-muted-foreground italic">Sem técnico</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs whitespace-nowrap">
@@ -328,7 +448,7 @@ function ClienteDetalhePage() {
           </div>
         </TabsContent>
 
-        {/* Projetos */}
+        {/* Tab: Projetos */}
         <TabsContent value="projetos" className="mt-4">
           <div className="rounded-lg border bg-card overflow-hidden">
             <Table>
@@ -372,7 +492,7 @@ function ClienteDetalhePage() {
           </div>
         </TabsContent>
 
-        {/* Histórico */}
+        {/* Tab: Histórico */}
         <TabsContent value="historico" className="mt-4">
           <div className="rounded-lg border bg-card divide-y">
             {eventosTimeline.length === 0 ? (
@@ -401,8 +521,8 @@ function ClienteDetalhePage() {
           </div>
         </TabsContent>
 
-        {/* Observações */}
-        <TabsContent value="observacoes" className="mt-4">
+        {/* Tab: Observações */}
+        <TabsContent value="observacoes" className="mt-4 flex flex-col gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base">Observações</CardTitle>
@@ -447,6 +567,31 @@ function ClienteDetalhePage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Histórico de alterações */}
+          {(cliente.historicoObservacoes?.length ?? 0) > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                Histórico de alterações
+              </p>
+              <div className="rounded-lg border bg-card divide-y">
+                {[...(cliente.historicoObservacoes ?? [])].reverse().map((entrada) => (
+                  <div key={entrada.id} className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-medium">{nomeUsuario(entrada.usuarioId)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {format(entrada.data, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm text-muted-foreground line-clamp-3">
+                      {entrada.conteudo || <em>Campo vazio</em>}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -505,25 +650,52 @@ function ClienteDetalhePage() {
                     <span className="text-xs text-foreground">{value}</span>
                   )}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="Abertos"
-                  stroke="#6366f1"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Fechados"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  dot={false}
-                />
+                <Line type="monotone" dataKey="Abertos" stroke="#6366f1" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Fechados" stroke="#22c55e" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal: Editar Cliente */}
+      <Dialog open={modalEditarAberto} onOpenChange={setModalEditarAberto}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-4 w-4" />
+              Editar Cliente
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edit-nome">Nome *</Label>
+              <Input
+                id="edit-nome"
+                value={editNome}
+                onChange={(e) => setEditNome(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && salvarEdicao()}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edit-glpi">Entidade GLPI</Label>
+              <Input
+                id="edit-glpi"
+                value={editGLPI}
+                onChange={(e) => setEditGLPI(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalEditarAberto(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={salvarEdicao} disabled={!editNome.trim()}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

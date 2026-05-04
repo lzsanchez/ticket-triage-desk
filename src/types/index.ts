@@ -7,11 +7,19 @@ export type Usuario = {
   email: string;
 };
 
+export type ObservacaoHistorico = {
+  id: string;
+  data: Date;
+  usuarioId: string;
+  conteudo: string;
+};
+
 export type Cliente = {
   id: string;
   nome: string;
   entidadeGLPI: string;
   observacoes?: string;
+  historicoObservacoes?: ObservacaoHistorico[];
 };
 
 export type TipoChamado = {
