@@ -66,6 +66,7 @@ import {
   type TipoProjeto,
 } from "@/types";
 import { NovoProjetoDialog } from "@/components/gestao/NovoProjetoDialog";
+import { useProjetoModal } from "@/lib/projetoModal";
 
 export const Route = createFileRoute("/gestao-entrega")({
   component: () => (
