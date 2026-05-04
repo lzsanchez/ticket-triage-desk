@@ -570,6 +570,7 @@ const COR_EVENTO: Record<string, string> = {
 };
 
 function EventoChip({ ev }: { ev: EventoCal }) {
+  const { abrir } = useProjetoModal();
   const key = ev.tipo === "prazo" ? `prazo-${ev.status}` : ev.tipo;
   const label =
     ev.tipo === "instalacao"
@@ -578,14 +579,15 @@ function EventoChip({ ev }: { ev: EventoCal }) {
         ? `Prazo · ${ev.projeto.nome}`
         : `Atualizar · ${ev.projeto.nome}`;
   return (
-    <div
+    <button
+      onClick={() => abrir(ev.projeto.id)}
       className={cn(
-        "truncate rounded px-1 py-0.5 text-[10px] font-medium",
+        "block w-full truncate rounded px-1 py-0.5 text-left text-[10px] font-medium hover:opacity-80",
         COR_EVENTO[key],
       )}
       title={label}
     >
       {label}
-    </div>
+    </button>
   );
 }
