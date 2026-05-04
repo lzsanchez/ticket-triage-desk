@@ -6,6 +6,8 @@ import type {
   StatusInterno,
   Movimentacao,
   TipoMovimentacao,
+  EventoProjeto,
+  TipoEventoProjeto,
 } from "@/types";
 import { mockChamados } from "@/data/mockChamados";
 import { mockProjetos } from "@/data/mockProjetos";
@@ -27,7 +29,12 @@ type DataContextValue = {
       autorId?: string;
     },
   ) => Projeto;
-  moverEtapaProjeto: (projetoId: string, novaEtapa: string) => void;
+  moverEtapaProjeto: (projetoId: string, novaEtapa: string, autorId?: string) => void;
+  atualizarProjeto: (projetoId: string, patch: Partial<Projeto>, autorId: string, descricao?: string) => void;
+  removerChamadoProjeto: (chamadoId: string, projetoId: string, autorId: string) => void;
+  registrarAtualizacaoProjeto: (projetoId: string, texto: string, autorId: string) => void;
+  adicionarObservacaoProjeto: (projetoId: string, texto: string, autorId: string) => void;
+  arquivarProjeto: (projetoId: string, autorId: string) => void;
   concluirTriagem: (chamadoId: string, autorId: string) => void;
 };
 
@@ -50,9 +57,37 @@ function novaMov(
   };
 }
 
+function novoEvento(
+  projetoId: string,
+  autorId: string,
+  tipo: TipoEventoProjeto,
+  descricao: string,
+): EventoProjeto {
+  return {
+    id: `${projetoId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    data: new Date(),
+    usuarioId: autorId,
+    tipo,
+    descricao,
+  };
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [chamados, setChamados] = useState<Chamado[]>(mockChamados);
-  const [projetos, setProjetos] = useState<Projeto[]>(mockProjetos);
+  const [projetos, setProjetos] = useState<Projeto[]>(
+    mockProjetos.map((p) => ({
+      ...p,
+      historico: p.historico ?? [
+        {
+          id: `${p.id}-init`,
+          data: p.dataCriacao,
+          usuarioId: "luciano",
+          tipo: "criacao" as const,
+          descricao: `Projeto "${p.nome}" criado.`,
+        },
+      ],
+    })),
+  );
 
   const updateChamado = useCallback(
     (id: string, patch: Partial<Chamado>, mov?: Movimentacao) => {
@@ -168,7 +203,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setProjetos((prev) =>
           prev.map((p) =>
             p.id === projetoId && !p.chamadosVinculados.includes(chamadoId)
-              ? { ...p, chamadosVinculados: [...p.chamadosVinculados, chamadoId] }
+              ? {
+                  ...p,
+                  chamadosVinculados: [...p.chamadosVinculados, chamadoId],
+                  historico: [
+                    ...(p.historico ?? []),
+                    novoEvento(
+                      projetoId,
+                      autorId,
+                      "chamado_adicionado",
+                      `Chamado ${chamadoId} adicionado ao projeto.`,
+                    ),
+                  ],
+                }
               : p,
           ),
         );
@@ -180,6 +227,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
           id: `proj-${Date.now()}`,
           dataCriacao: new Date(),
           chamadosVinculados: iniciais,
+          historico: [
+            {
+              id: `proj-${Date.now()}-init`,
+              data: new Date(),
+              usuarioId: autorId ?? "luciano",
+              tipo: "criacao",
+              descricao: `Projeto "${dados.nome}" criado.`,
+            },
+          ],
         };
         setProjetos((prev) => [...prev, novo]);
         iniciais.forEach((cid) => {
@@ -196,17 +252,121 @@ export function DataProvider({ children }: { children: ReactNode }) {
         });
         return novo;
       },
-      moverEtapaProjeto: (projetoId, novaEtapa) => {
+      moverEtapaProjeto: (projetoId, novaEtapa, autorId = "luciano") => {
+        setProjetos((prev) =>
+          prev.map((p) => {
+            if (p.id !== projetoId) return p;
+            if (p.etapaAtual === novaEtapa) return p;
+            return {
+              ...p,
+              etapaAtual: novaEtapa,
+              dataConclusao:
+                novaEtapa === "Entregue" || novaEtapa === "Concluído"
+                  ? p.dataConclusao ?? new Date()
+                  : p.dataConclusao,
+              historico: [
+                ...(p.historico ?? []),
+                novoEvento(
+                  projetoId,
+                  autorId,
+                  "mudanca_etapa",
+                  `Etapa alterada de "${p.etapaAtual}" para "${novaEtapa}".`,
+                ),
+              ],
+            };
+          }),
+        );
+      },
+      atualizarProjeto: (projetoId, patch, autorId, descricao) => {
         setProjetos((prev) =>
           prev.map((p) =>
             p.id === projetoId
               ? {
                   ...p,
-                  etapaAtual: novaEtapa,
-                  dataConclusao:
-                    novaEtapa === "Entregue" || novaEtapa === "Concluído"
-                      ? p.dataConclusao ?? new Date()
-                      : p.dataConclusao,
+                  ...patch,
+                  historico: [
+                    ...(p.historico ?? []),
+                    novoEvento(projetoId, autorId, "edicao", descricao ?? "Projeto editado."),
+                  ],
+                }
+              : p,
+          ),
+        );
+      },
+      removerChamadoProjeto: (chamadoId, projetoId, autorId) => {
+        setProjetos((prev) =>
+          prev.map((p) =>
+            p.id === projetoId
+              ? {
+                  ...p,
+                  chamadosVinculados: p.chamadosVinculados.filter((c) => c !== chamadoId),
+                  historico: [
+                    ...(p.historico ?? []),
+                    novoEvento(
+                      projetoId,
+                      autorId,
+                      "chamado_removido",
+                      `Chamado ${chamadoId} removido do projeto.`,
+                    ),
+                  ],
+                }
+              : p,
+          ),
+        );
+        updateChamado(
+          chamadoId,
+          { projetoId: null },
+          novaMov(chamadoId, autorId, "vinculacao_projeto", `Desvinculado do projeto.`),
+        );
+      },
+      registrarAtualizacaoProjeto: (projetoId, texto, autorId) => {
+        setProjetos((prev) =>
+          prev.map((p) =>
+            p.id === projetoId
+              ? {
+                  ...p,
+                  ultimaAtualizacaoRegistrada: new Date(),
+                  historico: [
+                    ...(p.historico ?? []),
+                    novoEvento(
+                      projetoId,
+                      autorId,
+                      "atualizacao_registrada",
+                      texto || "Atualização registrada.",
+                    ),
+                  ],
+                }
+              : p,
+          ),
+        );
+      },
+      adicionarObservacaoProjeto: (projetoId, texto, autorId) => {
+        setProjetos((prev) =>
+          prev.map((p) => {
+            if (p.id !== projetoId) return p;
+            const obs = p.observacoes ? `${p.observacoes}\n\n${texto}` : texto;
+            return {
+              ...p,
+              observacoes: obs,
+              historico: [
+                ...(p.historico ?? []),
+                novoEvento(projetoId, autorId, "observacao", texto),
+              ],
+            };
+          }),
+        );
+      },
+      arquivarProjeto: (projetoId, autorId) => {
+        setProjetos((prev) =>
+          prev.map((p) =>
+            p.id === projetoId
+              ? {
+                  ...p,
+                  arquivado: true,
+                  historico: [
+                    ...(p.historico ?? []),
+                    novoEvento(projetoId, autorId, "edicao", "Projeto arquivado."),
+                  ],
                 }
               : p,
           ),

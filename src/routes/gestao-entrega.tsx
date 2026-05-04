@@ -66,6 +66,7 @@ import {
   type TipoProjeto,
 } from "@/types";
 import { NovoProjetoDialog } from "@/components/gestao/NovoProjetoDialog";
+import { useProjetoModal } from "@/lib/projetoModal";
 
 export const Route = createFileRoute("/gestao-entrega")({
   component: () => (
@@ -97,7 +98,7 @@ function GestaoEntrega() {
   const [novoOpen, setNovoOpen] = useState(false);
 
   const ativos = useMemo(
-    () => projetos.filter((p) => !p.dataConclusao),
+    () => projetos.filter((p) => !p.dataConclusao && !p.arquivado),
     [projetos],
   );
 
@@ -348,8 +349,15 @@ function ColunaEtapa({ etapa, projetos }: { etapa: string; projetos: Projeto[] }
 
 function DraggableProjeto({ projeto }: { projeto: Projeto }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: projeto.id });
+  const { abrir } = useProjetoModal();
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} className={cn("touch-none", isDragging && "opacity-30")}>
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={() => abrir(projeto.id)}
+      className={cn("touch-none cursor-pointer", isDragging && "opacity-30")}
+    >
       <CardProjeto projeto={projeto} />
     </div>
   );
@@ -562,6 +570,7 @@ const COR_EVENTO: Record<string, string> = {
 };
 
 function EventoChip({ ev }: { ev: EventoCal }) {
+  const { abrir } = useProjetoModal();
   const key = ev.tipo === "prazo" ? `prazo-${ev.status}` : ev.tipo;
   const label =
     ev.tipo === "instalacao"
@@ -570,14 +579,15 @@ function EventoChip({ ev }: { ev: EventoCal }) {
         ? `Prazo · ${ev.projeto.nome}`
         : `Atualizar · ${ev.projeto.nome}`;
   return (
-    <div
+    <button
+      onClick={() => abrir(ev.projeto.id)}
       className={cn(
-        "truncate rounded px-1 py-0.5 text-[10px] font-medium",
+        "block w-full truncate rounded px-1 py-0.5 text-left text-[10px] font-medium hover:opacity-80",
         COR_EVENTO[key],
       )}
       title={label}
     >
       {label}
-    </div>
+    </button>
   );
 }

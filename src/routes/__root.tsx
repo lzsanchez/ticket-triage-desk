@@ -3,6 +3,8 @@ import { AuthProvider } from "@/lib/auth";
 import { DataProvider } from "@/lib/store";
 import { ChamadoModalProvider } from "@/lib/chamadoModal";
 import { ChamadoDetailsModal } from "@/components/chamado/ChamadoDetailsModal";
+import { ProjetoModalProvider } from "@/lib/projetoModal";
+import { ProjetoDetailsModal } from "@/components/gestao/ProjetoDetailsModal";
 
 import appCss from "../styles.css?url";
 
@@ -73,8 +75,11 @@ function RootComponent() {
     <AuthProvider>
       <DataProvider>
         <ChamadoModalProvider>
-          <Outlet />
-          <ChamadoDetailsModal />
+          <ProjetoModalProvider>
+            <Outlet />
+            <ChamadoDetailsModal />
+            <ProjetoDetailsModal />
+          </ProjetoModalProvider>
         </ChamadoModalProvider>
       </DataProvider>
     </AuthProvider>
