@@ -13,7 +13,9 @@ import { Route as TriagemRouteImport } from './routes/triagem'
 import { Route as MinhaFilaRouteImport } from './routes/minha-fila'
 import { Route as GestaoEntregaRouteImport } from './routes/gestao-entrega'
 import { Route as FilasEquipeRouteImport } from './routes/filas-equipe'
+import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 
 const TriagemRoute = TriagemRouteImport.update({
   id: '/triagem',
@@ -35,55 +37,83 @@ const FilasEquipeRoute = FilasEquipeRouteImport.update({
   path: '/filas-equipe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientesRoute = ClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientesIdRoute = ClientesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ClientesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRouteWithChildren
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
+  '/clientes/$id': typeof ClientesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRouteWithChildren
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
+  '/clientes/$id': typeof ClientesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRouteWithChildren
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
   '/triagem': typeof TriagemRoute
+  '/clientes/$id': typeof ClientesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/clientes'
     | '/filas-equipe'
     | '/gestao-entrega'
     | '/minha-fila'
     | '/triagem'
+    | '/clientes/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/filas-equipe' | '/gestao-entrega' | '/minha-fila' | '/triagem'
+  to:
+    | '/'
+    | '/clientes'
+    | '/filas-equipe'
+    | '/gestao-entrega'
+    | '/minha-fila'
+    | '/triagem'
+    | '/clientes/$id'
   id:
     | '__root__'
     | '/'
+    | '/clientes'
     | '/filas-equipe'
     | '/gestao-entrega'
     | '/minha-fila'
     | '/triagem'
+    | '/clientes/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClientesRoute: typeof ClientesRouteWithChildren
   FilasEquipeRoute: typeof FilasEquipeRoute
   GestaoEntregaRoute: typeof GestaoEntregaRoute
   MinhaFilaRoute: typeof MinhaFilaRoute
@@ -120,6 +150,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FilasEquipeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clientes': {
+      id: '/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof ClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -127,11 +164,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clientes/$id': {
+      id: '/clientes/$id'
+      path: '/$id'
+      fullPath: '/clientes/$id'
+      preLoaderRoute: typeof ClientesIdRouteImport
+      parentRoute: typeof ClientesRoute
+    }
   }
 }
 
+interface ClientesRouteChildren {
+  ClientesIdRoute: typeof ClientesIdRoute
+}
+
+const ClientesRouteChildren: ClientesRouteChildren = {
+  ClientesIdRoute: ClientesIdRoute,
+}
+
+const ClientesRouteWithChildren = ClientesRoute._addFileChildren(
+  ClientesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClientesRoute: ClientesRouteWithChildren,
   FilasEquipeRoute: FilasEquipeRoute,
   GestaoEntregaRoute: GestaoEntregaRoute,
   MinhaFilaRoute: MinhaFilaRoute,
