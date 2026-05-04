@@ -98,7 +98,7 @@ function GestaoEntrega() {
   const [novoOpen, setNovoOpen] = useState(false);
 
   const ativos = useMemo(
-    () => projetos.filter((p) => !p.dataConclusao),
+    () => projetos.filter((p) => !p.dataConclusao && !p.arquivado),
     [projetos],
   );
 
