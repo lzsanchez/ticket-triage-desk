@@ -142,7 +142,7 @@ function Conteudo({ projeto }: { projeto: Projeto }) {
 
   const cliente = mockClientes.find((c) => c.id === projeto.clienteId);
   const etapas = projeto.tipo === "entrega_link" ? ETAPAS_ENTREGA : ETAPAS_CANCELAMENTO;
-  const idxEtapa = etapas.indexOf(projeto.etapaAtual as (typeof etapas)[number]);
+  const idxEtapa = (etapas as readonly string[]).indexOf(projeto.etapaAtual);
 
   const itensProjeto = chamados.filter((c) => projeto.chamadosVinculados.includes(c.id));
   const concluidos = itensProjeto.filter((c) => c.statusInterno === "concluido").length;
