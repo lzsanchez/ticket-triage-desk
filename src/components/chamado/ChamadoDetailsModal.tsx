@@ -121,6 +121,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
     setSnooze,
     adicionarObservacao,
     marcarScriptUsado,
+    scripts,
   } = useData();
   const isManager = user?.role === "gestor";
   const autorId = user?.id ?? "luciano";
@@ -139,9 +140,16 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
   const semUpdate = calcularDiasSemUpdate(chamado.dataUltimaAtualizacao);
   const snoozed = chamado.snoozeAte && chamado.snoozeAte.getTime() > Date.now();
 
-  const scriptsCompativeis = mockScripts.filter(
+  const scriptsCompativeis = scripts.filter(
     (s) => s.tipoChamadoCategoria === chamado.tipoChamado.categoria,
   );
+
+  const placeholderCtx = {
+    cliente: cliente?.nome ?? "",
+    id_chamado: chamado.id,
+    tecnico: tecnico?.nome ?? "",
+    titulo: chamado.titulo,
+  };
 
   const historico = [...chamado.historicoMovimentacoes].sort(
     (a, b) => b.data.getTime() - a.data.getTime(),
