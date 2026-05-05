@@ -14,6 +14,7 @@ import { Route as ScriptsRouteImport } from './routes/scripts'
 import { Route as MinhaFilaRouteImport } from './routes/minha-fila'
 import { Route as GestaoEntregaRouteImport } from './routes/gestao-entrega'
 import { Route as FilasEquipeRouteImport } from './routes/filas-equipe'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
@@ -43,6 +44,11 @@ const FilasEquipeRoute = FilasEquipeRouteImport.update({
   path: '/filas-equipe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientesRoute = ClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
@@ -62,6 +68,7 @@ const ClientesIdRoute = ClientesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/clientes': typeof ClientesRouteWithChildren
+  '/configuracoes': typeof ConfiguracoesRoute
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/clientes': typeof ClientesRouteWithChildren
+  '/configuracoes': typeof ConfiguracoesRoute
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/clientes': typeof ClientesRouteWithChildren
+  '/configuracoes': typeof ConfiguracoesRoute
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/clientes'
+    | '/configuracoes'
     | '/filas-equipe'
     | '/gestao-entrega'
     | '/minha-fila'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/clientes'
+    | '/configuracoes'
     | '/filas-equipe'
     | '/gestao-entrega'
     | '/minha-fila'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/clientes'
+    | '/configuracoes'
     | '/filas-equipe'
     | '/gestao-entrega'
     | '/minha-fila'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientesRoute: typeof ClientesRouteWithChildren
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
   FilasEquipeRoute: typeof FilasEquipeRoute
   GestaoEntregaRoute: typeof GestaoEntregaRoute
   MinhaFilaRoute: typeof MinhaFilaRoute
@@ -170,6 +183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FilasEquipeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clientes': {
       id: '/clientes'
       path: '/clientes'
@@ -209,6 +229,7 @@ const ClientesRouteWithChildren = ClientesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientesRoute: ClientesRouteWithChildren,
+  ConfiguracoesRoute: ConfiguracoesRoute,
   FilasEquipeRoute: FilasEquipeRoute,
   GestaoEntregaRoute: GestaoEntregaRoute,
   MinhaFilaRoute: MinhaFilaRoute,

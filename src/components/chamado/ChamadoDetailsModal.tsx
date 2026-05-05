@@ -43,8 +43,15 @@ import { useData } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { mockClientes } from "@/data/mockClientes";
 import { mockUsuarios } from "@/data/mockUsuarios";
-import { mockScripts } from "@/data/mockScripts";
-import { calcularAging, calcularDiasSemUpdate, cn, getStatusVisual } from "@/lib/utils";
+import {
+  calcularAging,
+  calcularDiasSemUpdate,
+  cn,
+  getStatusVisual,
+  glpiTicketUrl,
+  fmtDataBR,
+  aplicarPlaceholdersScript,
+} from "@/lib/utils";
 import { VincularProjetoDialog } from "@/components/triagem/VincularProjetoDialog";
 import type {
   Chamado,
