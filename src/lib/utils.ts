@@ -62,3 +62,38 @@ export function getStatusVisual(chamado: Chamado, ref: Date = new Date()): Statu
   if (dias <= 7) return "amarelo";
   return "vermelho";
 }
+
+export const GLPI_BASE_URL = "https://mobdesk.mobitsolucoes.com";
+
+export function glpiTicketUrl(id: string | number): string {
+  return `${GLPI_BASE_URL}/front/ticket.form.php?id=${id}`;
+}
+
+const PAD = (n: number) => n.toString().padStart(2, "0");
+
+/** Formata data como dd/mm/yyyy HH:mm (24h, pt-BR). */
+export function fmtDataBR(d: Date | null | undefined): string {
+  if (!d) return "—";
+  return `${PAD(d.getDate())}/${PAD(d.getMonth() + 1)}/${d.getFullYear()} ${PAD(d.getHours())}:${PAD(d.getMinutes())}`;
+}
+
+/** Formata só a data dd/mm/yyyy. */
+export function fmtDateBR(d: Date | null | undefined): string {
+  if (!d) return "—";
+  return `${PAD(d.getDate())}/${PAD(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+/** Substitui placeholders {chave} no script pelos dados do chamado. */
+export function aplicarPlaceholdersScript(
+  conteudo: string,
+  ctx: {
+    cliente?: string;
+    id_chamado?: string;
+    tecnico?: string;
+    titulo?: string;
+    [k: string]: string | undefined;
+  },
+): string {
+  return conteudo.replace(/\{(\w+)\}/g, (_, k: string) => ctx[k] ?? `{${k}}`);
+}
+

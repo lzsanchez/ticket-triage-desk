@@ -43,8 +43,15 @@ import { useData } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { mockClientes } from "@/data/mockClientes";
 import { mockUsuarios } from "@/data/mockUsuarios";
-import { mockScripts } from "@/data/mockScripts";
-import { calcularAging, calcularDiasSemUpdate, cn, getStatusVisual } from "@/lib/utils";
+import {
+  calcularAging,
+  calcularDiasSemUpdate,
+  cn,
+  getStatusVisual,
+  glpiTicketUrl,
+  fmtDataBR,
+  aplicarPlaceholdersScript,
+} from "@/lib/utils";
 import { VincularProjetoDialog } from "@/components/triagem/VincularProjetoDialog";
 import type {
   Chamado,
@@ -115,6 +122,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
     setVerMaisTarde,
     adicionarObservacao,
     marcarScriptUsado,
+    scripts,
   } = useData();
   const isManager = user?.role === "gestor";
   const autorId = user?.id ?? "luciano";
@@ -133,9 +141,16 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
   const semUpdate = calcularDiasSemUpdate(chamado.dataUltimaAtualizacao);
   const emVerMaisTarde = chamado.verMaisTardeAte && chamado.verMaisTardeAte.getTime() > Date.now();
 
-  const scriptsCompativeis = mockScripts.filter(
+  const scriptsCompativeis = scripts.filter(
     (s) => s.tipoChamadoCategoria === chamado.tipoChamado.categoria,
   );
+
+  const placeholderCtx = {
+    cliente: cliente?.nome ?? "",
+    id_chamado: chamado.id,
+    tecnico: tecnico?.nome ?? "",
+    titulo: chamado.titulo,
+  };
 
   const historico = [...chamado.historicoMovimentacoes].sort(
     (a, b) => b.data.getTime() - a.data.getTime(),
@@ -162,7 +177,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
             <div className="flex items-center gap-3">
               <span className="font-mono text-xl font-bold text-primary">{chamado.id}</span>
               <a
-                href="#"
+                href={glpiTicketUrl(chamado.id)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-accent"
@@ -393,7 +408,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
                   <ScriptCard
                     key={s.id}
                     nome={s.nome}
-                    conteudo={s.conteudo}
+                    conteudo={aplicarPlaceholdersScript(s.conteudo, placeholderCtx)}
                     tags={s.tags}
                     onUsado={() => marcarScriptUsado(chamado.id, s.nome, autorId)}
                   />
@@ -614,11 +629,5 @@ function SnoozeDialog({
 }
 
 function fmtData(d: Date) {
-  return d.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return fmtDataBR(d);
 }

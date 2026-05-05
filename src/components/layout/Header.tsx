@@ -1,9 +1,11 @@
-import { LogOut } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useTheme } from "@/lib/theme";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
   const { user, logout } = useAuth();
+  const { theme, toggle } = useTheme();
   if (!user) return null;
 
   return (
@@ -13,6 +15,15 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggle}
+          title={theme === "dark" ? "Mudar para claro" : "Mudar para escuro"}
+          className="text-muted-foreground"
+        >
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
             {user.initials}

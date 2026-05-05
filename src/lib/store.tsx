@@ -9,17 +9,23 @@ import type {
   TipoMovimentacao,
   EventoProjeto,
   TipoEventoProjeto,
+  Script,
+  TipoChamado,
 } from "@/types";
 import { mockChamados } from "@/data/mockChamados";
 import { mockClientes } from "@/data/mockClientes";
 import { mockProjetos } from "@/data/mockProjetos";
+import { mockScripts } from "@/data/mockScripts";
 
 type DataContextValue = {
   chamados: Chamado[];
   clientes: Cliente[];
   projetos: Projeto[];
+  scripts: Script[];
+  tiposChamado: TipoChamado[];
   criarCliente: (dados: Omit<Cliente, "id">) => void;
   atualizarCliente: (id: string, patch: Partial<Omit<Cliente, "id">>) => void;
+  removerCliente: (id: string) => void;
   atualizarObservacoesCliente: (id: string, novoConteudo: string, autorId: string) => void;
   atribuirTecnico: (chamadoId: string, tecnicoId: string, autorId: string, motivo?: string) => void;
   setPrioridade: (chamadoId: string, prioridade: Prioridade) => void;
@@ -42,6 +48,17 @@ type DataContextValue = {
   adicionarObservacaoProjeto: (projetoId: string, texto: string, autorId: string) => void;
   arquivarProjeto: (projetoId: string, autorId: string) => void;
   concluirTriagem: (chamadoId: string, autorId: string) => void;
+  criarScript: (s: Omit<Script, "id">) => void;
+  atualizarScript: (id: string, patch: Partial<Omit<Script, "id">>) => void;
+  removerScript: (id: string) => void;
+  duplicarScript: (id: string) => void;
+  criarTipoChamado: (t: TipoChamado) => void;
+  atualizarTipoChamado: (
+    categoria: string,
+    subcategoria: string | undefined,
+    patch: TipoChamado,
+  ) => void;
+  removerTipoChamado: (categoria: string, subcategoria?: string) => void;
 };
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -95,6 +112,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ],
     })),
   );
+  const [scripts, setScripts] = useState<Script[]>(mockScripts);
+  const tiposIniciais = useMemo<TipoChamado[]>(() => {
+    const set = new Map<string, TipoChamado>();
+    for (const c of mockChamados) {
+      const k = `${c.tipoChamado.categoria}|${c.tipoChamado.subcategoria ?? ""}`;
+      if (!set.has(k)) set.set(k, c.tipoChamado);
+    }
+    return Array.from(set.values()).sort((a, b) =>
+      a.categoria.localeCompare(b.categoria) ||
+      (a.subcategoria ?? "").localeCompare(b.subcategoria ?? ""),
+    );
+  }, []);
+  const [tiposChamado, setTiposChamado] = useState<TipoChamado[]>(tiposIniciais);
 
   const updateChamado = useCallback(
     (id: string, patch: Partial<Chamado>, mov?: Movimentacao) => {
@@ -121,6 +151,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       chamados,
       clientes,
       projetos,
+      scripts,
+      tiposChamado,
       criarCliente: (dados) => {
         const slug = dados.nome
           .toLowerCase()
@@ -133,6 +165,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       },
       atualizarCliente: (id, patch) => {
         setClientes((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+      },
+      removerCliente: (id) => {
+        setClientes((prev) => prev.filter((c) => c.id !== id));
       },
       atualizarObservacoesCliente: (id, novoConteudo, autorId) => {
         setClientes((prev) =>
@@ -418,8 +453,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
           novaMov(chamadoId, autorId, "mudanca_status", `Triagem concluída — enviado para "a fazer hoje".`),
         );
       },
+      criarScript: (s) => {
+        const id = `script-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        setScripts((prev) => [...prev, { ...s, id }]);
+      },
+      atualizarScript: (id, patch) => {
+        setScripts((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+      },
+      removerScript: (id) => {
+        setScripts((prev) => prev.filter((s) => s.id !== id));
+      },
+      duplicarScript: (id) => {
+        setScripts((prev) => {
+          const orig = prev.find((s) => s.id === id);
+          if (!orig) return prev;
+          return [
+            ...prev,
+            { ...orig, id: `${orig.id}-copy-${Date.now()}`, nome: `${orig.nome} (cópia)` },
+          ];
+        });
+      },
+      criarTipoChamado: (t) => {
+        setTiposChamado((prev) => {
+          const existe = prev.some(
+            (x) => x.categoria === t.categoria && (x.subcategoria ?? "") === (t.subcategoria ?? ""),
+          );
+          if (existe) return prev;
+          return [...prev, t].sort((a, b) =>
+            a.categoria.localeCompare(b.categoria) ||
+            (a.subcategoria ?? "").localeCompare(b.subcategoria ?? ""),
+          );
+        });
+      },
+      atualizarTipoChamado: (categoria, subcategoria, patch) => {
+        setTiposChamado((prev) =>
+          prev.map((x) =>
+            x.categoria === categoria && (x.subcategoria ?? "") === (subcategoria ?? "")
+              ? patch
+              : x,
+          ),
+        );
+      },
+      removerTipoChamado: (categoria, subcategoria) => {
+        setTiposChamado((prev) =>
+          prev.filter(
+            (x) => !(x.categoria === categoria && (x.subcategoria ?? "") === (subcategoria ?? "")),
+          ),
+        );
+      },
     }),
-    [chamados, clientes, projetos, updateChamado],
+    [chamados, clientes, projetos, scripts, tiposChamado, updateChamado],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

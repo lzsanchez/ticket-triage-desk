@@ -4,7 +4,6 @@ import {
   ListTodo,
   Users2,
   FolderKanban,
-  CalendarDays,
   Building2,
   LayoutDashboard,
   FileCode2,
@@ -23,11 +22,10 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  { to: "/triagem", label: "Triagem", icon: Inbox, badge: 7 },
-  { to: "/minha-fila", label: "Minha Fila", icon: ListTodo, badge: 12 },
-  { to: "/filas-equipe", label: "Filas da Equipe", icon: Users2, badge: 24, managerOnly: true },
-  { to: "/gestao-entrega", label: "Gestão de Entrega", icon: FolderKanban, badge: 5 },
-  { to: "/calendario", label: "Calendário", icon: CalendarDays },
+  { to: "/triagem", label: "Triagem", icon: Inbox, managerOnly: true },
+  { to: "/minha-fila", label: "Minha Fila", icon: ListTodo },
+  { to: "/filas-equipe", label: "Filas da Equipe", icon: Users2, managerOnly: true },
+  { to: "/gestao-entrega", label: "Gestão de Entrega", icon: FolderKanban },
   { to: "/clientes", label: "Clientes", icon: Building2 },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, managerOnly: true },
   { to: "/scripts", label: "Scripts", icon: FileCode2 },

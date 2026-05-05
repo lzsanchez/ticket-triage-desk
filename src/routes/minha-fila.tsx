@@ -209,6 +209,7 @@ function MinhaFila() {
           <div className="ml-auto flex items-center gap-2">
             <Label htmlFor="esconder-snooze" className="text-xs text-muted-foreground">
               Esconder "ver mais tarde"
+              Esconder "Ver mais tarde"
             </Label>
             <Switch id="esconder-snooze" checked={esconderVerMaisTarde} onCheckedChange={setEsconderSnooze} />
           </div>
