@@ -176,7 +176,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
             <div className="flex items-center gap-3">
               <span className="font-mono text-xl font-bold text-primary">{chamado.id}</span>
               <a
-                href="#"
+                href={glpiTicketUrl(chamado.id)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-accent"
@@ -407,7 +407,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
                   <ScriptCard
                     key={s.id}
                     nome={s.nome}
-                    conteudo={s.conteudo}
+                    conteudo={aplicarPlaceholdersScript(s.conteudo, placeholderCtx)}
                     tags={s.tags}
                     onUsado={() => marcarScriptUsado(chamado.id, s.nome, autorId)}
                   />
@@ -628,11 +628,6 @@ function SnoozeDialog({
 }
 
 function fmtData(d: Date) {
-  return d.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return fmtDataBR(d);
+}
 }
