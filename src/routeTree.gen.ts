@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TriagemRouteImport } from './routes/triagem'
+import { Route as ScriptsRouteImport } from './routes/scripts'
 import { Route as MinhaFilaRouteImport } from './routes/minha-fila'
 import { Route as GestaoEntregaRouteImport } from './routes/gestao-entrega'
 import { Route as FilasEquipeRouteImport } from './routes/filas-equipe'
@@ -20,6 +21,11 @@ import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
 const TriagemRoute = TriagemRouteImport.update({
   id: '/triagem',
   path: '/triagem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScriptsRoute = ScriptsRouteImport.update({
+  id: '/scripts',
+  path: '/scripts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MinhaFilaRoute = MinhaFilaRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
+  '/scripts': typeof ScriptsRoute
   '/triagem': typeof TriagemRoute
   '/clientes/$id': typeof ClientesIdRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
+  '/scripts': typeof ScriptsRoute
   '/triagem': typeof TriagemRoute
   '/clientes/$id': typeof ClientesIdRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/filas-equipe': typeof FilasEquipeRoute
   '/gestao-entrega': typeof GestaoEntregaRoute
   '/minha-fila': typeof MinhaFilaRoute
+  '/scripts': typeof ScriptsRoute
   '/triagem': typeof TriagemRoute
   '/clientes/$id': typeof ClientesIdRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/filas-equipe'
     | '/gestao-entrega'
     | '/minha-fila'
+    | '/scripts'
     | '/triagem'
     | '/clientes/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/filas-equipe'
     | '/gestao-entrega'
     | '/minha-fila'
+    | '/scripts'
     | '/triagem'
     | '/clientes/$id'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/filas-equipe'
     | '/gestao-entrega'
     | '/minha-fila'
+    | '/scripts'
     | '/triagem'
     | '/clientes/$id'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   FilasEquipeRoute: typeof FilasEquipeRoute
   GestaoEntregaRoute: typeof GestaoEntregaRoute
   MinhaFilaRoute: typeof MinhaFilaRoute
+  ScriptsRoute: typeof ScriptsRoute
   TriagemRoute: typeof TriagemRoute
 }
 
@@ -127,6 +140,13 @@ declare module '@tanstack/react-router' {
       path: '/triagem'
       fullPath: '/triagem'
       preLoaderRoute: typeof TriagemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scripts': {
+      id: '/scripts'
+      path: '/scripts'
+      fullPath: '/scripts'
+      preLoaderRoute: typeof ScriptsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/minha-fila': {
@@ -192,6 +212,7 @@ const rootRouteChildren: RootRouteChildren = {
   FilasEquipeRoute: FilasEquipeRoute,
   GestaoEntregaRoute: GestaoEntregaRoute,
   MinhaFilaRoute: MinhaFilaRoute,
+  ScriptsRoute: ScriptsRoute,
   TriagemRoute: TriagemRoute,
 }
 export const routeTree = rootRouteImport
