@@ -630,4 +630,3 @@ function SnoozeDialog({
 function fmtData(d: Date) {
   return fmtDataBR(d);
 }
-}
