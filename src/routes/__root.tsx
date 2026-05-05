@@ -5,6 +5,8 @@ import { ChamadoModalProvider } from "@/lib/chamadoModal";
 import { ChamadoDetailsModal } from "@/components/chamado/ChamadoDetailsModal";
 import { ProjetoModalProvider } from "@/lib/projetoModal";
 import { ProjetoDetailsModal } from "@/components/gestao/ProjetoDetailsModal";
+import { ThemeProvider } from "@/lib/theme";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -76,16 +78,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <AuthProvider>
-      <DataProvider>
-        <ChamadoModalProvider>
-          <ProjetoModalProvider>
-            <Outlet />
-            <ChamadoDetailsModal />
-            <ProjetoDetailsModal />
-          </ProjetoModalProvider>
-        </ChamadoModalProvider>
-      </DataProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <DataProvider>
+          <ChamadoModalProvider>
+            <ProjetoModalProvider>
+              <Outlet />
+              <ChamadoDetailsModal />
+              <ProjetoDetailsModal />
+              <Toaster />
+            </ProjetoModalProvider>
+          </ChamadoModalProvider>
+        </DataProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
