@@ -188,7 +188,7 @@ function HomeAnalista() {
   );
 
   const snoozadosVencidos = useMemo(
-    () => meusChamados.filter((c) => c.snoozeAte && c.snoozeAte < new Date()),
+    () => meusChamados.filter((c) => c.verMaisTardeAte && c.verMaisTardeAte < new Date()),
     [meusChamados],
   );
 
@@ -227,8 +227,8 @@ function HomeAnalista() {
   const proximosRetornos = useMemo(() => {
     const agora = new Date();
     return chamados
-      .filter((c) => c.tecnicoId === user!.id && c.snoozeAte && c.snoozeAte > agora)
-      .sort((a, b) => a.snoozeAte!.getTime() - b.snoozeAte!.getTime())
+      .filter((c) => c.tecnicoId === user!.id && c.verMaisTardeAte && c.verMaisTardeAte > agora)
+      .sort((a, b) => a.verMaisTardeAte!.getTime() - b.verMaisTardeAte!.getTime())
       .slice(0, 5);
   }, [chamados, user]);
 
@@ -393,7 +393,7 @@ function HomeAnalista() {
                     </div>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
                       volta em{" "}
-                      {formatDistanceToNow(c.snoozeAte!, { locale: ptBR })}
+                      {formatDistanceToNow(c.verMaisTardeAte!, { locale: ptBR })}
                     </span>
                   </div>
                 );
@@ -485,7 +485,7 @@ function ModoOperacional({ onDaily }: { onDaily: () => void }) {
   );
 
   const snoozadosVencidos = useMemo(
-    () => chamadosAtivos.filter((c) => c.snoozeAte && c.snoozeAte < new Date()),
+    () => chamadosAtivos.filter((c) => c.verMaisTardeAte && c.verMaisTardeAte < new Date()),
     [chamadosAtivos],
   );
 

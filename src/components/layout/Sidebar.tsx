@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
 
 type NavItem = {
   to: string;
@@ -42,16 +43,8 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-5">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-secondary text-secondary-foreground text-xs font-bold">
-          FL
-        </div>
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold tracking-tight">Fila de Links</span>
-          <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
-            Gestão de Chamados
-          </span>
-        </div>
+      <div className="flex h-14 items-center border-b border-sidebar-border px-5">
+        <Logo size="compact" />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
@@ -86,8 +79,8 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <div className="border-t border-sidebar-border px-4 py-3 text-[11px] text-sidebar-foreground/50">
-        v0.1 · interno
+      <div className="border-t border-sidebar-border px-4 py-3 text-[11px] text-sidebar-foreground/40">
+        v0.2 · ctrl+desk
       </div>
     </aside>
   );

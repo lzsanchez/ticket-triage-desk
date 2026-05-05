@@ -83,8 +83,8 @@ function FilasEquipeBody() {
   const total = ativos.length;
   const vermelhos = ativos.filter((c) => getStatusVisual(c) === "vermelho").length;
   const aguardandoGestor = ativos.filter((c) => c.statusInterno === "aguardando_gestor").length;
-  const snoozeVencido = ativos.filter(
-    (c) => c.snoozeAte && c.snoozeAte.getTime() <= Date.now(),
+  const verMaisTardeVencido = ativos.filter(
+    (c) => c.verMaisTardeAte && c.verMaisTardeAte.getTime() <= Date.now(),
   ).length;
 
   return (
@@ -130,7 +130,7 @@ function FilasEquipeBody() {
         <Indicador label="Total no backlog" value={total} />
         <Indicador label="Chamados parados (vermelho)" value={vermelhos} tone="destructive" />
         <Indicador label="Aguardando você" value={aguardandoGestor} tone="warning" />
-        <Indicador label="Snoozes vencidos sem ação" value={snoozeVencido} tone="muted" />
+        <Indicador label="Ver mais tarde vencidos sem ação" value={verMaisTardeVencido} tone="muted" />
       </div>
 
       <div className="mt-6">
@@ -393,7 +393,7 @@ const STATUS_VISUAL_OPTS = [
   { value: "verde", label: "🟢 Verde" },
   { value: "amarelo", label: "🟡 Amarelo" },
   { value: "vermelho", label: "🔴 Vermelho" },
-  { value: "cinza", label: "⚪ Cinza (snooze)" },
+  { value: "cinza", label: "⚪ Cinza (ver mais tarde)" },
 ];
 
 function ModoConsolidada() {

@@ -1,182 +1,70 @@
 import type { Projeto } from "@/types";
 
-const HOJE = new Date("2026-05-01T12:00:00Z");
-const diasAtras = (d: number) => {
-  const dt = new Date(HOJE);
-  dt.setDate(dt.getDate() - d);
-  return dt;
-};
-const diasAFrente = (d: number) => {
-  const dt = new Date(HOJE);
-  dt.setDate(dt.getDate() + d);
-  return dt;
-};
+const HOJE = new Date("2026-05-05T12:00:00Z");
+const da = (d: number) => { const dt = new Date(HOJE); dt.setDate(dt.getDate() - d); return dt; };
+const df = (d: number) => { const dt = new Date(HOJE); dt.setDate(dt.getDate() + d); return dt; };
+
+// Chamado IDs must match mockChamados.ts
+const SIN_IDS  = Array.from({ length: 18 }, (_, i) => `2026050${(i + 1).toString().padStart(3, "0")}`);
+const RUM_IDS  = Array.from({ length: 12 }, (_, i) => `2026050${(i + 19).toString().padStart(3, "0")}`);
+const IDL_IDS  = Array.from({ length: 8  }, (_, i) => `2026050${(i + 31).toString().padStart(3, "0")}`);
+const BRA_IDS  = Array.from({ length: 9  }, (_, i) => `2026050${(i + 39).toString().padStart(3, "0")}`);
 
 export const mockProjetos: Projeto[] = [
   {
-    id: "proj-sin-implante-expansao",
-    nome: "Sin Implante - Expansão Clínicas",
+    id: "proj-sin-expansao",
+    nome: "Sin Implante - Expansão Clínicas 2025",
     clienteId: "sin-implante",
     tipo: "entrega_link",
-    etapaAtual: "Aguardando Viabilidade",
-    prazoPrometido: diasAFrente(45),
-    chamadosVinculados: Array.from({ length: 10 }).map(
-      (_, i) => `202604319${(i + 1).toString().padStart(2, "0")}`,
-    ),
-    observacoes:
-      "Lote de 10 novas clínicas. Acompanhar viabilidade junto à Vivo e Algar. Cliente prioritário.",
-    dataCriacao: diasAtras(18),
-    frequenciaAtualizacao: "semanal",
-  },
-  {
-    id: "proj-rumolog-cancel-q2",
-    nome: "Rumolog - Cancelamento Q2",
-    clienteId: "rumolog",
-    tipo: "cancelamento",
-    etapaAtual: "Consulta de Multa",
-    prazoPrometido: diasAFrente(60),
-    chamadosVinculados: ["2026043301", "2026043302", "2026043303", "2026043304"],
-    observacoes:
-      "Cancelamento de 4 links da Rumolog no Q2. Verificar fim de fidelidade de cada contrato.",
-    dataCriacao: diasAtras(60),
-    frequenciaAtualizacao: "quinzenal",
-  },
-  {
-    id: "proj-id-logistics-guarulhos",
-    nome: "Id Logistics - Guarulhos",
-    clienteId: "id-logistics",
-    tipo: "entrega_link",
-    etapaAtual: "Agendado",
-    prazoPrometido: diasAFrente(10),
-    chamadosVinculados: ["2026043202"],
-    observacoes: "Instalação agendada para próxima semana.",
-    dataCriacao: diasAtras(35),
-    dataInstalacao: diasAFrente(5),
-    frequenciaAtualizacao: "diaria",
-  },
-  {
-    id: "proj-garbuio-sorocaba",
-    nome: "Garbuio - Filial Sorocaba",
-    clienteId: "garbuio",
-    tipo: "entrega_link",
-    etapaAtual: "Precificação",
-    prazoPrometido: diasAFrente(2),
-    chamadosVinculados: ["2026043204"],
-    observacoes: "Cliente com pressa. Prazo apertado.",
-    dataCriacao: diasAtras(20),
-    frequenciaAtualizacao: "diaria",
-  },
-  {
-    id: "proj-steck-curitiba",
-    nome: "Steck - Curitiba",
-    clienteId: "steck",
-    tipo: "entrega_link",
-    etapaAtual: "Validação Comercial",
-    prazoPrometido: diasAFrente(20),
-    chamadosVinculados: ["2026043205"],
-    observacoes: "",
-    dataCriacao: diasAtras(40),
-    frequenciaAtualizacao: "semanal",
-  },
-  {
-    id: "proj-lopes-brooklin",
-    nome: "Lopes - Brooklin",
-    clienteId: "lopes",
-    tipo: "entrega_link",
-    etapaAtual: "Solicitado",
-    prazoPrometido: diasAFrente(30),
-    chamadosVinculados: ["2026043206"],
-    observacoes: "",
-    dataCriacao: diasAtras(5),
-    frequenciaAtualizacao: "a_cada_2_dias",
-  },
-  {
-    id: "proj-dentista-tatuape",
-    nome: "Dentista Mais - Tatuapé",
-    clienteId: "dentista-mais",
-    tipo: "entrega_link",
-    etapaAtual: "Agendado",
-    prazoPrometido: diasAFrente(8),
-    chamadosVinculados: ["2026043207"],
-    observacoes: "",
-    dataCriacao: diasAtras(15),
-    dataInstalacao: diasAFrente(3),
-    frequenciaAtualizacao: "diaria",
-  },
-  {
-    id: "proj-rumolog-extrema",
-    nome: "Rumolog - Extrema",
-    clienteId: "rumolog",
-    tipo: "entrega_link",
     etapaAtual: "Instalado",
-    prazoPrometido: diasAFrente(15),
-    chamadosVinculados: ["2026043208"],
-    observacoes: "Pendente apenas certificação final.",
-    dataCriacao: diasAtras(50),
+    prazoPrometido: df(25),
+    chamadosVinculados: SIN_IDS,
+    observacoes:
+      "Lote de 18 novas clínicas. Instalações em andamento — maioria já concluída operacionalmente, aguardando entrega formal. Cliente prioritário.",
+    dataCriacao: da(320),
     frequenciaAtualizacao: "semanal",
+    ultimaAtualizacaoRegistrada: da(2),
   },
-  // alguns concluídos para métricas
   {
-    id: "proj-concluido-1",
-    nome: "Brasanitas - Sede SP (concluído)",
-    clienteId: "grupo-brasanitas",
+    id: "proj-rumolog-modern",
+    nome: "Rumolog - Modernização Links Q1",
+    clienteId: "rumolog",
     tipo: "entrega_link",
-    etapaAtual: "Entregue",
-    prazoPrometido: diasAtras(10),
-    chamadosVinculados: [],
-    observacoes: "",
-    dataCriacao: diasAtras(45),
-    dataConclusao: diasAtras(12),
-    frequenciaAtualizacao: "semanal",
+    etapaAtual: "Aguardando Viabilidade",
+    prazoPrometido: df(40),
+    chamadosVinculados: RUM_IDS,
+    observacoes:
+      "Substituição de 12 links legados por solução MPLS. Acompanhar viabilidade técnica com Vivo e Claro. Aprovação comercial pendente.",
+    dataCriacao: da(60),
+    frequenciaAtualizacao: "a_cada_2_dias",
+    ultimaAtualizacaoRegistrada: da(1),
   },
   {
-    id: "proj-concluido-2",
-    nome: "Steck - Joinville (concluído)",
-    clienteId: "steck",
-    tipo: "entrega_link",
-    etapaAtual: "Entregue",
-    prazoPrometido: diasAtras(20),
-    chamadosVinculados: [],
-    observacoes: "",
-    dataCriacao: diasAtras(70),
-    dataConclusao: diasAtras(25),
-    frequenciaAtualizacao: "semanal",
-  },
-  {
-    id: "proj-concluido-cancel-1",
-    nome: "Lopes - Cancelamento Antigo",
-    clienteId: "lopes",
-    tipo: "cancelamento",
-    etapaAtual: "Concluído",
-    prazoPrometido: diasAtras(5),
-    chamadosVinculados: [],
-    observacoes: "",
-    dataCriacao: diasAtras(35),
-    dataConclusao: diasAtras(8),
-    frequenciaAtualizacao: "quinzenal",
-  },
-  {
-    id: "proj-cancel-id-logistics",
-    nome: "Id Logistics - Cancelamento CD Antigo",
+    id: "proj-idlog-cancel",
+    nome: "Id Logistics - Cancelamento Filiais Desativadas",
     clienteId: "id-logistics",
     tipo: "cancelamento",
     etapaAtual: "Análise Interna",
-    prazoPrometido: diasAFrente(25),
-    chamadosVinculados: ["2026043306"],
-    observacoes: "",
-    dataCriacao: diasAtras(40),
-    frequenciaAtualizacao: "semanal",
+    prazoPrometido: df(9),
+    chamadosVinculados: IDL_IDS,
+    observacoes:
+      "Cancelamento de 8 links em filiais fechadas no Q1. Prazo apertado — multas precisam ser validadas antes do aceite. Luciano responsável.",
+    dataCriacao: da(30),
+    frequenciaAtualizacao: "diaria",
+    ultimaAtualizacaoRegistrada: da(0),
   },
   {
-    id: "proj-cancel-garbuio",
-    nome: "Garbuio - Cancelamento Filial",
-    clienteId: "garbuio",
-    tipo: "cancelamento",
-    etapaAtual: "Autorização Cliente",
-    prazoPrometido: diasAFrente(7),
-    chamadosVinculados: ["2026043307"],
-    observacoes: "",
-    dataCriacao: diasAtras(20),
-    frequenciaAtualizacao: "a_cada_2_dias",
+    id: "proj-brasanitas-implant",
+    nome: "Grupo Brasanitas - Implantação Rede Nova",
+    clienteId: "grupo-brasanitas",
+    tipo: "entrega_link",
+    etapaAtual: "Agendado",
+    prazoPrometido: df(19),
+    chamadosVinculados: BRA_IDS,
+    observacoes:
+      "9 unidades do grupo sendo migradas para nova topologia de rede. 5 já instaladas, 4 aguardando agendamento com operadora.",
+    dataCriacao: da(45),
+    frequenciaAtualizacao: "semanal",
+    ultimaAtualizacaoRegistrada: da(3),
   },
 ];

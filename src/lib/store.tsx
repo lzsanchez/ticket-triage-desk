@@ -24,7 +24,7 @@ type DataContextValue = {
   atribuirTecnico: (chamadoId: string, tecnicoId: string, autorId: string, motivo?: string) => void;
   setPrioridade: (chamadoId: string, prioridade: Prioridade) => void;
   setStatus: (chamadoId: string, status: StatusInterno, autorId: string) => void;
-  setSnooze: (chamadoId: string, ate: Date | null, motivo: string, autorId: string) => void;
+  setVerMaisTarde: (chamadoId: string, ate: Date | null, motivo: string, autorId: string) => void;
   adicionarObservacao: (chamadoId: string, texto: string, autorId: string) => void;
   marcarScriptUsado: (chamadoId: string, scriptNome: string, autorId: string) => void;
   vincularProjeto: (chamadoId: string, projetoId: string, autorId: string) => void;
@@ -178,14 +178,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
           novaMov(chamadoId, autorId, "mudanca_status", `Status alterado para "${status}".`),
         );
       },
-      setSnooze: (chamadoId, ate, motivo, autorId) => {
+      setVerMaisTarde: (chamadoId, ate, motivo, autorId) => {
         const desc = ate
-          ? `Chamado em snooze até ${ate.toLocaleString("pt-BR")}.`
-          : "Snooze removido.";
+          ? `Chamado em "Ver mais tarde" até ${ate.toLocaleString("pt-BR")}.`
+          : '"Ver mais tarde" removido.';
         updateChamado(
           chamadoId,
-          { snoozeAte: ate, snoozeMotivo: ate ? motivo : null },
-          novaMov(chamadoId, autorId, "snooze", desc, ate ? motivo : undefined),
+          { verMaisTardeAte: ate, verMaisTardeMotivo: ate ? motivo : null },
+          novaMov(chamadoId, autorId, "ver_mais_tarde", desc, ate ? motivo : undefined),
         );
       },
       adicionarObservacao: (chamadoId, texto, autorId) => {

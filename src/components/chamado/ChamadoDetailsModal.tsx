@@ -60,6 +60,7 @@ const STATUS_LABEL: Record<StatusInterno, string> = {
   em_tratativa: "Em tratativa",
   aguardando_terceiro: "Aguardando terceiro",
   aguardando_gestor: "Aguardando gestor",
+  ver_mais_tarde: "Ver mais tarde",
   concluido: "Concluído",
 };
 
@@ -80,7 +81,7 @@ const PRIORIDADE_BADGE: Record<string, string> = {
 const TIPO_MOV_ICON: Record<TipoMovimentacao, typeof History> = {
   atribuicao: UserCircle2,
   mudanca_status: ArrowLeftRight,
-  snooze: Moon,
+  ver_mais_tarde: Moon,
   observacao: StickyNote,
   vinculacao_projeto: FolderKanban,
 };
@@ -111,14 +112,14 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
   const {
     setStatus,
     atribuirTecnico,
-    setSnooze,
+    setVerMaisTarde,
     adicionarObservacao,
     marcarScriptUsado,
   } = useData();
   const isManager = user?.role === "gestor";
   const autorId = user?.id ?? "luciano";
 
-  const [snoozeOpen, setSnoozeOpen] = useState(false);
+  const [verMaisTardeOpen, setSnoozeOpen] = useState(false);
   const [scriptsOpen, setScriptsOpen] = useState(true);
   const [vincularOpen, setVincularOpen] = useState(false);
   const [novaObs, setNovaObs] = useState("");
@@ -130,7 +131,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
   const visual = getStatusVisual(chamado);
   const aging = calcularAging(chamado.dataAbertura);
   const semUpdate = calcularDiasSemUpdate(chamado.dataUltimaAtualizacao);
-  const snoozed = chamado.snoozeAte && chamado.snoozeAte.getTime() > Date.now();
+  const emVerMaisTarde = chamado.verMaisTardeAte && chamado.verMaisTardeAte.getTime() > Date.now();
 
   const scriptsCompativeis = mockScripts.filter(
     (s) => s.tipoChamadoCategoria === chamado.tipoChamado.categoria,
@@ -148,7 +149,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
   }
 
   function aplicarSnoozePreset(date: Date | null, motivo: string) {
-    setSnooze(chamado.id, date, motivo, autorId);
+    setVerMaisTarde(chamado.id, date, motivo, autorId);
     setSnoozeOpen(false);
   }
 
@@ -213,9 +214,9 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
                 <span className="text-sm font-medium text-foreground">
                   {STATUS_LABEL[chamado.statusInterno]}
                 </span>
-                {snoozed ? (
+                {emVerMaisTarde ? (
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <Moon className="h-3 w-3" /> em snooze
+                    <Moon className="h-3 w-3" /> ver mais tarde
                   </span>
                 ) : null}
               </div>
@@ -294,7 +295,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
 
             <Button variant="outline" size="sm" className="h-9" onClick={() => setSnoozeOpen(true)}>
               <Moon className="h-4 w-4 mr-1.5" />
-              {snoozed ? "Editar snooze" : "Snooze"}
+              {emVerMaisTarde ? "Editar ver mais tarde" : "Ver mais tarde"}
             </Button>
 
             <Button variant="outline" size="sm" className="h-9" onClick={() => setVincularOpen(true)}>
@@ -312,23 +313,23 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
               Aplicar script ({scriptsCompativeis.length})
             </Button>
 
-            {snoozed ? (
+            {emVerMaisTarde ? (
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-9 text-muted-foreground"
-                onClick={() => setSnooze(chamado.id, null, "", autorId)}
+                onClick={() => setVerMaisTarde(chamado.id, null, "", autorId)}
               >
                 <RefreshCw className="h-4 w-4 mr-1.5" />
-                Tirar do snooze
+                Tirar do "Ver mais tarde"
               </Button>
             ) : null}
           </div>
-          {snoozed && chamado.snoozeAte ? (
+          {emVerMaisTarde && chamado.verMaisTardeAte ? (
             <p className="mt-2 text-xs text-muted-foreground">
               <Moon className="inline h-3 w-3 mr-1" />
-              Em snooze até {fmtData(chamado.snoozeAte)}
-              {chamado.snoozeMotivo ? ` — ${chamado.snoozeMotivo}` : ""}
+              Ver mais tarde até {fmtData(chamado.verMaisTardeAte)}
+              {chamado.verMaisTardeMotivo ? ` — ${chamado.verMaisTardeMotivo}` : ""}
             </p>
           ) : null}
         </section>
@@ -404,7 +405,7 @@ function ModalConteudo({ chamado }: { chamado: Chamado }) {
       </div>
 
       <SnoozeDialog
-        open={snoozeOpen}
+        open={verMaisTardeOpen}
         onOpenChange={setSnoozeOpen}
         onConfirm={aplicarSnoozePreset}
       />
@@ -553,7 +554,7 @@ function SnoozeDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CalendarClock className="h-5 w-5" /> Colocar em snooze
+            <CalendarClock className="h-5 w-5" /> Ver mais tarde
           </DialogTitle>
           <DialogDescription>
             Escolha quando o chamado deve voltar para a fila ativa.
