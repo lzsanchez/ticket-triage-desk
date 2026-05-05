@@ -98,6 +98,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ],
     })),
   );
+  const [scripts, setScripts] = useState<Script[]>(mockScripts);
+  const tiposIniciais = useMemo<TipoChamado[]>(() => {
+    const set = new Map<string, TipoChamado>();
+    for (const c of mockChamados) {
+      const k = `${c.tipoChamado.categoria}|${c.tipoChamado.subcategoria ?? ""}`;
+      if (!set.has(k)) set.set(k, c.tipoChamado);
+    }
+    return Array.from(set.values()).sort((a, b) =>
+      a.categoria.localeCompare(b.categoria) ||
+      (a.subcategoria ?? "").localeCompare(b.subcategoria ?? ""),
+    );
+  }, []);
+  const [tiposChamado, setTiposChamado] = useState<TipoChamado[]>(tiposIniciais);
 
   const updateChamado = useCallback(
     (id: string, patch: Partial<Chamado>, mov?: Movimentacao) => {
