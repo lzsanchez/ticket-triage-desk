@@ -9,10 +9,13 @@ import type {
   TipoMovimentacao,
   EventoProjeto,
   TipoEventoProjeto,
+  Script,
+  TipoChamado,
 } from "@/types";
 import { mockChamados } from "@/data/mockChamados";
 import { mockClientes } from "@/data/mockClientes";
 import { mockProjetos } from "@/data/mockProjetos";
+import { mockScripts } from "@/data/mockScripts";
 
 type DataContextValue = {
   chamados: Chamado[];
