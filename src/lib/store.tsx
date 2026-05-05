@@ -21,8 +21,11 @@ type DataContextValue = {
   chamados: Chamado[];
   clientes: Cliente[];
   projetos: Projeto[];
+  scripts: Script[];
+  tiposChamado: TipoChamado[];
   criarCliente: (dados: Omit<Cliente, "id">) => void;
   atualizarCliente: (id: string, patch: Partial<Omit<Cliente, "id">>) => void;
+  removerCliente: (id: string) => void;
   atualizarObservacoesCliente: (id: string, novoConteudo: string, autorId: string) => void;
   atribuirTecnico: (chamadoId: string, tecnicoId: string, autorId: string, motivo?: string) => void;
   setPrioridade: (chamadoId: string, prioridade: Prioridade) => void;
@@ -45,6 +48,17 @@ type DataContextValue = {
   adicionarObservacaoProjeto: (projetoId: string, texto: string, autorId: string) => void;
   arquivarProjeto: (projetoId: string, autorId: string) => void;
   concluirTriagem: (chamadoId: string, autorId: string) => void;
+  criarScript: (s: Omit<Script, "id">) => void;
+  atualizarScript: (id: string, patch: Partial<Omit<Script, "id">>) => void;
+  removerScript: (id: string) => void;
+  duplicarScript: (id: string) => void;
+  criarTipoChamado: (t: TipoChamado) => void;
+  atualizarTipoChamado: (
+    categoria: string,
+    subcategoria: string | undefined,
+    patch: TipoChamado,
+  ) => void;
+  removerTipoChamado: (categoria: string, subcategoria?: string) => void;
 };
 
 const DataContext = createContext<DataContextValue | null>(null);
