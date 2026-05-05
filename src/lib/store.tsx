@@ -137,6 +137,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       chamados,
       clientes,
       projetos,
+      scripts,
+      tiposChamado,
       criarCliente: (dados) => {
         const slug = dados.nome
           .toLowerCase()
@@ -149,6 +151,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       },
       atualizarCliente: (id, patch) => {
         setClientes((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+      },
+      removerCliente: (id) => {
+        setClientes((prev) => prev.filter((c) => c.id !== id));
       },
       atualizarObservacoesCliente: (id, novoConteudo, autorId) => {
         setClientes((prev) =>
@@ -434,8 +439,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
           novaMov(chamadoId, autorId, "mudanca_status", `Triagem concluída — enviado para "a fazer hoje".`),
         );
       },
+      criarScript: (s) => {
+        const id = `script-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        setScripts((prev) => [...prev, { ...s, id }]);
+      },
+      atualizarScript: (id, patch) => {
+        setScripts((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+      },
+      removerScript: (id) => {
+        setScripts((prev) => prev.filter((s) => s.id !== id));
+      },
+      duplicarScript: (id) => {
+        setScripts((prev) => {
+          const orig = prev.find((s) => s.id === id);
+          if (!orig) return prev;
+          return [
+            ...prev,
+            { ...orig, id: `${orig.id}-copy-${Date.now()}`, nome: `${orig.nome} (cópia)` },
+          ];
+        });
+      },
+      criarTipoChamado: (t) => {
+        setTiposChamado((prev) => {
+          const existe = prev.some(
+            (x) => x.categoria === t.categoria && (x.subcategoria ?? "") === (t.subcategoria ?? ""),
+          );
+          if (existe) return prev;
+          return [...prev, t].sort((a, b) =>
+            a.categoria.localeCompare(b.categoria) ||
+            (a.subcategoria ?? "").localeCompare(b.subcategoria ?? ""),
+          );
+        });
+      },
+      atualizarTipoChamado: (categoria, subcategoria, patch) => {
+        setTiposChamado((prev) =>
+          prev.map((x) =>
+            x.categoria === categoria && (x.subcategoria ?? "") === (subcategoria ?? "")
+              ? patch
+              : x,
+          ),
+        );
+      },
+      removerTipoChamado: (categoria, subcategoria) => {
+        setTiposChamado((prev) =>
+          prev.filter(
+            (x) => !(x.categoria === categoria && (x.subcategoria ?? "") === (subcategoria ?? "")),
+          ),
+        );
+      },
     }),
-    [chamados, clientes, projetos, updateChamado],
+    [chamados, clientes, projetos, scripts, tiposChamado, updateChamado],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
