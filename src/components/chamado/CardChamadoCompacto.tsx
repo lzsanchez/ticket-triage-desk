@@ -22,16 +22,16 @@ export function CardChamadoCompacto({
   const visual = getStatusVisual(chamado);
   const aging = calcularAging(chamado.dataAbertura);
   const semUpdate = calcularDiasSemUpdate(chamado.dataUltimaAtualizacao);
-  const snoozed = chamado.snoozeAte && chamado.snoozeAte.getTime() > Date.now();
-  const diasParaVoltar = snoozed
-    ? Math.max(1, Math.ceil((chamado.snoozeAte!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+  const emVerMaisTarde = chamado.verMaisTardeAte && chamado.verMaisTardeAte.getTime() > Date.now();
+  const diasParaVoltar = emVerMaisTarde
+    ? Math.max(1, Math.ceil((chamado.verMaisTardeAte!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
   return (
     <div
       className={cn(
         "group rounded-md border border-border bg-card p-2.5 shadow-sm cursor-grab active:cursor-grabbing select-none",
-        snoozed && "opacity-50",
+        emVerMaisTarde && "opacity-50",
         dragging && "shadow-lg ring-2 ring-primary/30 cursor-grabbing",
       )}
     >
@@ -53,7 +53,7 @@ export function CardChamadoCompacto({
           </p>
           <div className="mt-1 flex items-center justify-between gap-1">
             <span className="truncate text-[11px] text-muted-foreground">{cliente?.nome}</span>
-            {snoozed ? (
+            {emVerMaisTarde ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="inline-flex items-center text-muted-foreground">
@@ -61,8 +61,8 @@ export function CardChamadoCompacto({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  Em snooze · volta em {diasParaVoltar}d
-                  {chamado.snoozeMotivo ? ` — ${chamado.snoozeMotivo}` : ""}
+                  Ver mais tarde · volta em {diasParaVoltar}d
+                  {chamado.verMaisTardeMotivo ? ` — ${chamado.verMaisTardeMotivo}` : ""}
                 </TooltipContent>
               </Tooltip>
             ) : null}

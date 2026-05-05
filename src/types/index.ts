@@ -33,6 +33,7 @@ export type StatusInterno =
   | "em_tratativa"
   | "aguardando_terceiro"
   | "aguardando_gestor"
+  | "ver_mais_tarde"
   | "concluido";
 
 export type Prioridade = "baixa" | "media" | "alta" | "critica";
@@ -40,7 +41,7 @@ export type Prioridade = "baixa" | "media" | "alta" | "critica";
 export type TipoMovimentacao =
   | "atribuicao"
   | "mudanca_status"
-  | "snooze"
+  | "ver_mais_tarde"
   | "observacao"
   | "vinculacao_projeto";
 
@@ -63,8 +64,8 @@ export type Chamado = {
   dataUltimaAtualizacao: Date;
   statusInterno: StatusInterno;
   prioridade: Prioridade;
-  snoozeAte: Date | null;
-  snoozeMotivo: string | null;
+  verMaisTardeAte: Date | null;
+  verMaisTardeMotivo: string | null;
   projetoId: string | null;
   observacoesInternas: string;
   historicoMovimentacoes: Movimentacao[];

@@ -72,7 +72,7 @@ const STATUS_VISUAL_OPTS = [
   { value: "verde", label: "🟢 Verde" },
   { value: "amarelo", label: "🟡 Amarelo" },
   { value: "vermelho", label: "🔴 Vermelho" },
-  { value: "cinza", label: "⚪ Cinza (snooze)" },
+  { value: "cinza", label: "⚪ Cinza (ver mais tarde)" },
 ];
 
 function MinhaFilaPage() {
@@ -98,7 +98,7 @@ function MinhaFila() {
   const [filtroClientes, setFiltroClientes] = useState<string[]>([]);
   const [filtroTipos, setFiltroTipos] = useState<string[]>([]);
   const [filtroStatus, setFiltroStatus] = useState<string[]>([]);
-  const [esconderSnooze, setEsconderSnooze] = useState(false);
+  const [esconderVerMaisTarde, setEsconderSnooze] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -126,26 +126,27 @@ function MinhaFila() {
       if (filtroClientes.length && !filtroClientes.includes(c.clienteId)) return false;
       if (filtroTipos.length && !filtroTipos.includes(c.tipoChamado.categoria)) return false;
       if (filtroStatus.length && !filtroStatus.includes(getStatusVisual(c))) return false;
-      const snoozed = c.snoozeAte && c.snoozeAte.getTime() > Date.now();
-      if (esconderSnooze && snoozed) return false;
+      const emVerMaisTarde = c.verMaisTardeAte && c.verMaisTardeAte.getTime() > Date.now();
+      if (esconderVerMaisTarde && emVerMaisTarde) return false;
       return true;
     });
-  }, [meusChamados, filtroClientes, filtroTipos, filtroStatus, esconderSnooze]);
+  }, [meusChamados, filtroClientes, filtroTipos, filtroStatus, esconderVerMaisTarde]);
 
   const porColuna = useMemo(() => {
-    const map: Record<StatusInterno, Chamado[]> = {
+    const map: Partial<Record<StatusInterno, Chamado[]>> & Record<"a_fazer_hoje"|"em_tratativa"|"aguardando_terceiro"|"aguardando_gestor"|"concluido", Chamado[]> = {
       triagem: [],
       a_fazer_hoje: [],
       em_tratativa: [],
       aguardando_terceiro: [],
       aguardando_gestor: [],
+      ver_mais_tarde: [],
       concluido: [],
     };
     for (const c of filtrados) {
       if (c.statusInterno === "concluido") {
         if (ehHoje(c.dataUltimaAtualizacao)) map.concluido.push(c);
       } else if (c.statusInterno in map) {
-        map[c.statusInterno].push(c);
+        (map[c.statusInterno] as Chamado[]).push(c);
       }
     }
     return map;
@@ -166,7 +167,7 @@ function MinhaFila() {
   }
 
   const total = meusChamados.length;
-  const filtroAtivo = filtroClientes.length + filtroTipos.length + filtroStatus.length + (esconderSnooze ? 1 : 0) > 0;
+  const filtroAtivo = filtroClientes.length + filtroTipos.length + filtroStatus.length + (esconderVerMaisTarde ? 1 : 0) > 0;
 
   const activeChamado = activeId ? chamados.find((c) => c.id === activeId) ?? null : null;
 
@@ -207,16 +208,17 @@ function MinhaFila() {
           />
           <div className="ml-auto flex items-center gap-2">
             <Label htmlFor="esconder-snooze" className="text-xs text-muted-foreground">
+              Esconder "ver mais tarde"
               Esconder "Ver mais tarde"
             </Label>
-            <Switch id="esconder-snooze" checked={esconderSnooze} onCheckedChange={setEsconderSnooze} />
+            <Switch id="esconder-snooze" checked={esconderVerMaisTarde} onCheckedChange={setEsconderSnooze} />
           </div>
         </div>
 
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="mt-4 grid grid-cols-5 gap-3 min-w-[1100px] overflow-x-auto pb-4">
             {COLUNAS.map((col) => (
-              <Coluna key={col.status} def={col} chamados={porColuna[col.status]} />
+              <Coluna key={col.status} def={col} chamados={porColuna[col.status] ?? []} />
             ))}
           </div>
 
@@ -292,17 +294,17 @@ function CardChamado({ chamado, dragging }: { chamado: Chamado; dragging?: boole
   const visual = getStatusVisual(chamado);
   const aging = calcularAging(chamado.dataAbertura);
   const semUpdate = calcularDiasSemUpdate(chamado.dataUltimaAtualizacao);
-  const snoozed = chamado.snoozeAte && chamado.snoozeAte.getTime() > Date.now();
+  const emVerMaisTarde = chamado.verMaisTardeAte && chamado.verMaisTardeAte.getTime() > Date.now();
 
-  const diasParaVoltar = snoozed
-    ? Math.max(1, Math.ceil((chamado.snoozeAte!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+  const diasParaVoltar = emVerMaisTarde
+    ? Math.max(1, Math.ceil((chamado.verMaisTardeAte!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
   return (
     <div
       className={cn(
         "group rounded-md border border-border bg-card p-2.5 shadow-sm cursor-grab active:cursor-grabbing select-none",
-        snoozed && "opacity-50",
+        emVerMaisTarde && "opacity-50",
         dragging && "shadow-lg ring-2 ring-primary/30 cursor-grabbing",
       )}
     >
@@ -326,7 +328,7 @@ function CardChamado({ chamado, dragging }: { chamado: Chamado; dragging?: boole
           </p>
           <div className="mt-1 flex items-center justify-between gap-1">
             <span className="truncate text-[11px] text-muted-foreground">{cliente?.nome}</span>
-            {snoozed ? (
+            {emVerMaisTarde ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="inline-flex items-center text-muted-foreground">
@@ -334,8 +336,8 @@ function CardChamado({ chamado, dragging }: { chamado: Chamado; dragging?: boole
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  Em snooze · volta em {diasParaVoltar}d
-                  {chamado.snoozeMotivo ? ` — ${chamado.snoozeMotivo}` : ""}
+                  Ver mais tarde · volta em {diasParaVoltar}d
+                  {chamado.verMaisTardeMotivo ? ` — ${chamado.verMaisTardeMotivo}` : ""}
                 </TooltipContent>
               </Tooltip>
             ) : null}

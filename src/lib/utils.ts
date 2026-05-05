@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { format, formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import type { Chamado, StatusVisual } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
@@ -24,15 +26,35 @@ export function calcularDiasSemUpdate(dataUltimaAtualizacao: Date, ref?: Date): 
   return diasDesde(dataUltimaAtualizacao, ref);
 }
 
+/** Returns a GLPI ticket URL for the given chamado ID. */
+export function getGLPIUrl(chamadoId: string): string {
+  return `https://glpi.mobitsolucoes.com.br/front/ticket.form.php?id=${chamadoId}`;
+}
+
+/** Formats a date as dd/MM/yyyy. */
+export function formatarData(data: Date): string {
+  return format(data, "dd/MM/yyyy", { locale: ptBR });
+}
+
+/** Formats a date as dd/MM/yyyy HH:mm. */
+export function formatarDataHora(data: Date): string {
+  return format(data, "dd/MM/yyyy HH:mm", { locale: ptBR });
+}
+
+/** Returns a human-readable relative date string (e.g. "há 3 dias"). */
+export function formatarDataRelativa(data: Date): string {
+  return formatDistanceToNow(data, { addSuffix: true, locale: ptBR });
+}
+
 /**
  * Status visual do chamado:
- *  - cinza:    em snooze ativo
+ *  - cinza:    em "ver mais tarde" ativo
  *  - verde:    dias sem update <= 3
  *  - amarelo:  dias sem update entre 4 e 7
  *  - vermelho: dias sem update > 7
  */
 export function getStatusVisual(chamado: Chamado, ref: Date = new Date()): StatusVisual {
-  if (chamado.snoozeAte && chamado.snoozeAte.getTime() > ref.getTime()) {
+  if (chamado.verMaisTardeAte && chamado.verMaisTardeAte.getTime() > ref.getTime()) {
     return "cinza";
   }
   const dias = calcularDiasSemUpdate(chamado.dataUltimaAtualizacao, ref);
