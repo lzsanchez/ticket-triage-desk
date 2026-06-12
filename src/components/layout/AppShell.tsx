@@ -5,8 +5,15 @@ import { useAuth } from "@/lib/auth";
 import { LoginScreen } from "@/components/auth/LoginScreen";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+        Carregando...
+      </div>
+    );
+  }
   if (!user) return <LoginScreen />;
 
   return (
