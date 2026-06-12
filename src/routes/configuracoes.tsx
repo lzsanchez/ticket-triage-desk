@@ -1,12 +1,14 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 import { useData } from "@/lib/store";
-import { mockUsuarios } from "@/data/mockUsuarios";
+import { supabase } from "@/integrations/supabase/client";
+import { createUserAccount } from "@/lib/users.functions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,37 +87,120 @@ function Configuracoes() {
 
 // ─── Usuários ────────────────────────────────────────────────────────────────
 
+type ProfileRow = { user_id: string; slug: string; nome: string; email: string; iniciais: string; role: "gestor" | "analista" };
+
 function TabUsuarios() {
+  const { user } = useAuth();
+  const isManager = user?.role === "gestor";
+  const createUser = useServerFn(createUserAccount);
+  const [rows, setRows] = useState<ProfileRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ nome: "", email: "", iniciais: "", slug: "", password: "", role: "analista" as "gestor" | "analista" });
+  const [saving, setSaving] = useState(false);
+
+  async function refresh() {
+    setLoading(true);
+    const [{ data: profiles }, { data: roles }] = await Promise.all([
+      supabase.from("profiles").select("user_id, slug, nome, email, iniciais").order("nome"),
+      supabase.from("user_roles").select("user_id, role"),
+    ]);
+    const roleMap = new Map<string, "gestor" | "analista">();
+    (roles ?? []).forEach((r) => {
+      if (r.role === "gestor") roleMap.set(r.user_id, "gestor");
+      else if (!roleMap.has(r.user_id)) roleMap.set(r.user_id, "analista");
+    });
+    setRows((profiles ?? []).map((p) => ({ ...p, role: roleMap.get(p.user_id) ?? "analista" })));
+    setLoading(false);
+  }
+  useEffect(() => { refresh(); }, []);
+
+  async function salvar() {
+    if (!form.nome || !form.email || !form.password || !form.slug || !form.iniciais) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    setSaving(true);
+    try {
+      await createUser({ data: form });
+      toast.success("Usuário criado");
+      setOpen(false);
+      setForm({ nome: "", email: "", iniciais: "", slug: "", password: "", role: "analista" });
+      await refresh();
+    } catch (err) {
+      toast.error("Erro ao criar usuário", { description: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>E-mail</TableHead>
-            <TableHead>Perfil</TableHead>
-            <TableHead className="text-right">Permissões</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {mockUsuarios.map((u) => (
-            <TableRow key={u.id}>
-              <TableCell className="font-medium">{u.nome}</TableCell>
-              <TableCell className="text-muted-foreground">{u.email}</TableCell>
-              <TableCell className="capitalize">{u.perfil}</TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toast("Em breve: gerenciamento de permissões")}
-                >
-                  Gerenciar permissões
-                </Button>
-              </TableCell>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{rows.length} usuários cadastrados</p>
+        {isManager ? (
+          <Button onClick={() => setOpen(true)} size="sm" className="gap-2">
+            <Plus className="h-4 w-4" /> Novo usuário
+          </Button>
+        ) : null}
+      </div>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>E-mail</TableHead>
+              <TableHead>Slug</TableHead>
+              <TableHead>Perfil</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Carregando...</TableCell></TableRow>
+            ) : rows.length === 0 ? (
+              <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Nenhum usuário</TableCell></TableRow>
+            ) : rows.map((u) => (
+              <TableRow key={u.user_id}>
+                <TableCell className="font-medium">{u.nome}</TableCell>
+                <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                <TableCell className="font-mono text-xs">{u.slug}</TableCell>
+                <TableCell className="capitalize">{u.role}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Nome completo</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} className="mt-1" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Slug (identificador)</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} className="mt-1" placeholder="ex: joao" /></div>
+              <div><Label>Iniciais</Label><Input value={form.iniciais} onChange={(e) => setForm({ ...form, iniciais: e.target.value.toUpperCase().slice(0, 3) })} className="mt-1" /></div>
+            </div>
+            <div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="mt-1" /></div>
+            <div><Label>Senha temporária (mín. 8)</Label><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="mt-1" /></div>
+            <div>
+              <Label>Perfil</Label>
+              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "gestor" | "analista" })}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="analista">Analista</SelectItem>
+                  <SelectItem value="gestor">Gestor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={salvar} disabled={saving}>{saving ? "Criando..." : "Criar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useTheme } from "@/lib/theme";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   if (!user) return null;
 
@@ -35,7 +35,7 @@ export function Header() {
             </span>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={logout} className="gap-2 text-muted-foreground">
+        <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2 text-muted-foreground">
           <LogOut className="h-4 w-4" />
           Sair
         </Button>
