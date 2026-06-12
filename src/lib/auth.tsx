@@ -1,40 +1,89 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { MOCK_USERS, type User } from "./users";
+import { supabase } from "@/integrations/supabase/client";
+
+export type UserRole = "gestor" | "analista";
+
+export type User = {
+  id: string; // slug (compatível com mock data: "luciano", "pedro", "priscila")
+  authId: string;
+  name: string;
+  initials: string;
+  role: UserRole;
+  email: string;
+};
 
 type AuthContextValue = {
   user: User | null;
-  login: (id: string) => void;
-  logout: () => void;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const STORAGE_KEY = "fdl.auth.userId";
+
+async function loadProfile(authId: string): Promise<User | null> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_id, slug, nome, iniciais, email")
+    .eq("user_id", authId)
+    .maybeSingle();
+  if (!profile) return null;
+  const { data: roles } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", authId);
+  const role: UserRole = roles?.some((r) => r.role === "gestor") ? "gestor" : "analista";
+  return {
+    id: profile.slug,
+    authId: profile.user_id,
+    name: profile.nome,
+    initials: profile.iniciais,
+    email: profile.email,
+    role,
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const id = window.localStorage.getItem(STORAGE_KEY);
-    if (id) {
-      const found = MOCK_USERS.find((u) => u.id === id) ?? null;
-      setUser(found);
-    }
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED" && event !== "INITIAL_SESSION") return;
+      if (session?.user) {
+        // defer to avoid deadlock
+        setTimeout(() => {
+          loadProfile(session.user.id).then((u) => {
+            setUser(u);
+            setLoading(false);
+          });
+        }, 0);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) setLoading(false);
+    });
+
+    return () => sub.subscription.unsubscribe();
   }, []);
 
-  const login = (id: string) => {
-    const found = MOCK_USERS.find((u) => u.id === id);
-    if (!found) return;
-    window.localStorage.setItem(STORAGE_KEY, found.id);
-    setUser(found);
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
   };
 
-  const logout = () => {
-    window.localStorage.removeItem(STORAGE_KEY);
+  const signOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
   };
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>{children}</AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
