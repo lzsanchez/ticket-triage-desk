@@ -34,6 +34,7 @@ type DataContextValue = {
   syncing: boolean;
   syncGLPI: () => void;
   importarCSV: (chamados: Chamado[], clientes: Cliente[]) => void;
+  limparFila: () => void;
   criarCliente: (dados: Omit<Cliente, "id">) => void;
   atualizarCliente: (id: string, patch: Partial<Omit<Cliente, "id">>) => void;
   removerCliente: (id: string) => void;
@@ -191,6 +192,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       tiposChamado,
       syncing,
       syncGLPI,
+      limparFila: () => {
+        setChamados([]);
+        setClientes([]);
+      },
       importarCSV: (novos, novosClientes) => {
         setChamados((prev) => {
           const merged = mergeLocalState(novos);

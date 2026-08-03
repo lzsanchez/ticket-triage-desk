@@ -1,4 +1,4 @@
-import { LogOut, Moon, RefreshCw, Sun, Upload } from "lucide-react";
+import { LogOut, Moon, RefreshCw, Sun, Trash2, Upload } from "lucide-react";
 import { useRef } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
@@ -6,11 +6,22 @@ import { useTheme } from "@/lib/theme";
 import { useData } from "@/lib/store";
 import { parseGLPICSV } from "@/lib/csvImport";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function Header() {
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
-  const { syncing, syncGLPI, importarCSV } = useData();
+  const { syncing, syncGLPI, importarCSV, limparFila } = useData();
   const fileRef = useRef<HTMLInputElement>(null);
   if (!user) return null;
 
@@ -50,6 +61,35 @@ export function Header() {
         >
           <Upload className="h-4 w-4" />
         </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Limpar fila de chamados"
+              className="text-muted-foreground"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Limpar fila de chamados?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Todos os chamados e clientes serão removidos da tela. Os dados no GLPI e os overrides locais (status, ver mais tarde, etc.) não são apagados — é só recarregar ou sincronizar para trazer tudo de volta.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => { limparFila(); toast.success("Fila limpa."); }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Limpar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Button
           variant="ghost"
           size="icon"
