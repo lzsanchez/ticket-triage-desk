@@ -1,11 +1,13 @@
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LogOut, Moon, RefreshCw, Sun } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
+import { useData } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
   const { user, signOut } = useAuth();
   const { theme, toggle } = useTheme();
+  const { syncing, syncGLPI } = useData();
   if (!user) return null;
 
   return (
@@ -15,6 +17,16 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={syncGLPI}
+          disabled={syncing}
+          title="Sincronizar com Mobdesk"
+          className="text-muted-foreground"
+        >
+          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
