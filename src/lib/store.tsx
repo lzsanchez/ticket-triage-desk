@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type {
   Chamado,
   Cliente,
@@ -16,6 +16,14 @@ import { mockChamados } from "@/data/mockChamados";
 import { mockClientes } from "@/data/mockClientes";
 import { mockProjetos } from "@/data/mockProjetos";
 import { mockScripts } from "@/data/mockScripts";
+import { fetchGLPIData } from "@/lib/glpi/service";
+import {
+  mergeLocalState,
+  setLocalChamado,
+  getLocalChamados,
+  getLocalProjetos,
+  saveLocalProjetos,
+} from "@/lib/localState";
 
 type DataContextValue = {
   chamados: Chamado[];
@@ -96,10 +104,12 @@ function novoEvento(
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [chamados, setChamados] = useState<Chamado[]>(mockChamados);
-  const [clientes, setClientes] = useState<Cliente[]>(mockClientes);
-  const [projetos, setProjetos] = useState<Projeto[]>(
-    mockProjetos.map((p) => ({
+  const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [projetos, setProjetos] = useState<Projeto[]>(() => {
+    const local = getLocalProjetos();
+    if (local.length > 0) return local;
+    return mockProjetos.map((p) => ({
       ...p,
       historico: p.historico ?? [
         {
@@ -110,8 +120,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           descricao: `Projeto "${p.nome}" criado.`,
         },
       ],
-    })),
-  );
+    }));
+  });
   const [scripts, setScripts] = useState<Script[]>(mockScripts);
   const tiposIniciais = useMemo<TipoChamado[]>(() => {
     const set = new Map<string, TipoChamado>();
@@ -125,6 +135,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     );
   }, []);
   const [tiposChamado, setTiposChamado] = useState<TipoChamado[]>(tiposIniciais);
+
+  useEffect(() => {
+    fetchGLPIData()
+      .then(({ chamados: glpiChamados, clientes: glpiClientes }) => {
+        setChamados(mergeLocalState(glpiChamados));
+        setClientes(glpiClientes);
+      })
+      .catch(() => {
+        setChamados(mergeLocalState(mockChamados));
+        setClientes(mockClientes);
+      });
+  }, []);
+
+  useEffect(() => {
+    saveLocalProjetos(projetos);
+  }, [projetos]);
 
   const updateChamado = useCallback(
     (id: string, patch: Partial<Chamado>, mov?: Movimentacao) => {
@@ -188,17 +214,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         );
       },
       atribuirTecnico: (chamadoId, tecnicoId, autorId, motivo) => {
-        updateChamado(
-          chamadoId,
-          { tecnicoId },
-          novaMov(
-            chamadoId,
-            autorId,
-            "atribuicao",
-            `Chamado atribuído a ${tecnicoId}.`,
-            motivo,
-          ),
-        );
+        const mov = novaMov(chamadoId, autorId, "atribuicao", `Chamado atribuído a ${tecnicoId}.`, motivo);
+        updateChamado(chamadoId, { tecnicoId }, mov);
+        const lc = getLocalChamados()[chamadoId] ?? {};
+        setLocalChamado(chamadoId, { movimentacoes: [...(lc.movimentacoes ?? []), mov] });
       },
       setPrioridade: (chamadoId, prioridade) => {
         // prioridade não gera entrada no histórico (decisão silenciosa)
@@ -207,73 +226,64 @@ export function DataProvider({ children }: { children: ReactNode }) {
         );
       },
       setStatus: (chamadoId, status, autorId) => {
-        updateChamado(
-          chamadoId,
-          { statusInterno: status },
-          novaMov(chamadoId, autorId, "mudanca_status", `Status alterado para "${status}".`),
-        );
+        const mov = novaMov(chamadoId, autorId, "mudanca_status", `Status alterado para "${status}".`);
+        updateChamado(chamadoId, { statusInterno: status }, mov);
+        const lc = getLocalChamados()[chamadoId] ?? {};
+        setLocalChamado(chamadoId, { statusOverride: status, movimentacoes: [...(lc.movimentacoes ?? []), mov] });
       },
       setVerMaisTarde: (chamadoId, ate, motivo, autorId) => {
         const desc = ate
           ? `Chamado em "Ver mais tarde" até ${ate.toLocaleString("pt-BR")}.`
           : '"Ver mais tarde" removido.';
-        updateChamado(
-          chamadoId,
-          { verMaisTardeAte: ate, verMaisTardeMotivo: ate ? motivo : null },
-          novaMov(chamadoId, autorId, "ver_mais_tarde", desc, ate ? motivo : undefined),
-        );
+        const mov = novaMov(chamadoId, autorId, "ver_mais_tarde", desc, ate ? motivo : undefined);
+        updateChamado(chamadoId, { verMaisTardeAte: ate, verMaisTardeMotivo: ate ? motivo : null }, mov);
+        const lc = getLocalChamados()[chamadoId] ?? {};
+        setLocalChamado(chamadoId, {
+          verMaisTardeAte: ate ? ate.toISOString() : null,
+          verMaisTardeMotivo: ate ? motivo : null,
+          movimentacoes: [...(lc.movimentacoes ?? []), mov],
+        });
       },
       adicionarObservacao: (chamadoId, texto, autorId) => {
+        const atual = chamados.find((c) => c.id === chamadoId);
+        const obsAtual = atual?.observacoesInternas ?? "";
+        const novaObs = obsAtual ? `${obsAtual}\n\n${texto}` : texto;
+        const mov = novaMov(chamadoId, autorId, "observacao", texto);
         setChamados((prev) =>
           prev.map((c) => {
             if (c.id !== chamadoId) return c;
-            const obs = c.observacoesInternas
-              ? `${c.observacoesInternas}\n\n${texto}`
-              : texto;
             return {
               ...c,
-              observacoesInternas: obs,
+              observacoesInternas: novaObs,
               dataUltimaAtualizacao: new Date(),
-              historicoMovimentacoes: [
-                ...c.historicoMovimentacoes,
-                novaMov(chamadoId, autorId, "observacao", texto),
-              ],
+              historicoMovimentacoes: [...c.historicoMovimentacoes, mov],
             };
           }),
         );
+        const lc = getLocalChamados()[chamadoId] ?? {};
+        setLocalChamado(chamadoId, { observacoesInternas: novaObs, movimentacoes: [...(lc.movimentacoes ?? []), mov] });
       },
       marcarScriptUsado: (chamadoId, scriptNome, autorId) => {
+        const mov = novaMov(chamadoId, autorId, "observacao", `Script aplicado: "${scriptNome}".`);
         setChamados((prev) =>
           prev.map((c) =>
             c.id === chamadoId
               ? {
                   ...c,
                   dataUltimaAtualizacao: new Date(),
-                  historicoMovimentacoes: [
-                    ...c.historicoMovimentacoes,
-                    novaMov(
-                      chamadoId,
-                      autorId,
-                      "observacao",
-                      `Script aplicado: "${scriptNome}".`,
-                    ),
-                  ],
+                  historicoMovimentacoes: [...c.historicoMovimentacoes, mov],
                 }
               : c,
           ),
         );
+        const lc = getLocalChamados()[chamadoId] ?? {};
+        setLocalChamado(chamadoId, { movimentacoes: [...(lc.movimentacoes ?? []), mov] });
       },
       vincularProjeto: (chamadoId, projetoId, autorId) => {
-        updateChamado(
-          chamadoId,
-          { projetoId },
-          novaMov(
-            chamadoId,
-            autorId,
-            "vinculacao_projeto",
-            `Vinculado ao projeto ${projetoId}.`,
-          ),
-        );
+        const mov = novaMov(chamadoId, autorId, "vinculacao_projeto", `Vinculado ao projeto ${projetoId}.`);
+        updateChamado(chamadoId, { projetoId }, mov);
+        const lc = getLocalChamados()[chamadoId] ?? {};
+        setLocalChamado(chamadoId, { projetoId, movimentacoes: [...(lc.movimentacoes ?? []), mov] });
         setProjetos((prev) =>
           prev.map((p) =>
             p.id === projetoId && !p.chamadosVinculados.includes(chamadoId)
@@ -313,16 +323,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         };
         setProjetos((prev) => [...prev, novo]);
         iniciais.forEach((cid) => {
-          updateChamado(
-            cid,
-            { projetoId: novo.id },
-            novaMov(
-              cid,
-              autorId ?? "luciano",
-              "vinculacao_projeto",
-              `Vinculado ao novo projeto "${novo.nome}".`,
-            ),
-          );
+          const mov = novaMov(cid, autorId ?? "luciano", "vinculacao_projeto", `Vinculado ao novo projeto "${novo.nome}".`);
+          updateChamado(cid, { projetoId: novo.id }, mov);
+          const lc = getLocalChamados()[cid] ?? {};
+          setLocalChamado(cid, { projetoId: novo.id, movimentacoes: [...(lc.movimentacoes ?? []), mov] });
         });
         return novo;
       },
@@ -387,11 +391,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
               : p,
           ),
         );
-        updateChamado(
-          chamadoId,
-          { projetoId: null },
-          novaMov(chamadoId, autorId, "vinculacao_projeto", `Desvinculado do projeto.`),
-        );
+        const movDesv = novaMov(chamadoId, autorId, "vinculacao_projeto", `Desvinculado do projeto.`);
+        updateChamado(chamadoId, { projetoId: null }, movDesv);
+        const lcDesv = getLocalChamados()[chamadoId] ?? {};
+        setLocalChamado(chamadoId, { projetoId: null, movimentacoes: [...(lcDesv.movimentacoes ?? []), movDesv] });
       },
       registrarAtualizacaoProjeto: (projetoId, texto, autorId) => {
         setProjetos((prev) =>
@@ -447,11 +450,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         );
       },
       concluirTriagem: (chamadoId, autorId) => {
-        updateChamado(
-          chamadoId,
-          { statusInterno: "a_fazer_hoje" },
-          novaMov(chamadoId, autorId, "mudanca_status", `Triagem concluída — enviado para "a fazer hoje".`),
-        );
+        const mov = novaMov(chamadoId, autorId, "mudanca_status", `Triagem concluída — enviado para "a fazer hoje".`);
+        updateChamado(chamadoId, { statusInterno: "a_fazer_hoje" }, mov);
+        const lc = getLocalChamados()[chamadoId] ?? {};
+        setLocalChamado(chamadoId, { statusOverride: "a_fazer_hoje", movimentacoes: [...(lc.movimentacoes ?? []), mov] });
       },
       criarScript: (s) => {
         const id = `script-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
