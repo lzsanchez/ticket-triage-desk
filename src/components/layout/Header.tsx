@@ -1,14 +1,37 @@
-import { LogOut, Moon, RefreshCw, Sun } from "lucide-react";
+import { LogOut, Moon, RefreshCw, Sun, Upload } from "lucide-react";
+import { useRef } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 import { useData } from "@/lib/store";
+import { parseGLPICSV } from "@/lib/csvImport";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
-  const { syncing, syncGLPI } = useData();
+  const { syncing, syncGLPI, importarCSV } = useData();
+  const fileRef = useRef<HTMLInputElement>(null);
   if (!user) return null;
+
+  function handleCSV(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const { chamados, clientes, warnings } = parseGLPICSV(text);
+      if (!chamados.length) {
+        toast.error("Nenhum chamado encontrado no arquivo.");
+      } else {
+        importarCSV(chamados, clientes);
+        toast.success(`${chamados.length} chamados importados com sucesso.`);
+        if (warnings.length) toast.warning(warnings.join(" "));
+      }
+    };
+    reader.readAsText(file, "utf-8");
+    e.target.value = "";
+  }
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background px-6">
@@ -17,6 +40,16 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4">
+        <input ref={fileRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCSV} />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => fileRef.current?.click()}
+          title="Importar CSV do GLPI"
+          className="text-muted-foreground"
+        >
+          <Upload className="h-4 w-4" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
