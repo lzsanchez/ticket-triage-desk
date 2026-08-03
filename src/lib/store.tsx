@@ -33,6 +33,7 @@ type DataContextValue = {
   tiposChamado: TipoChamado[];
   syncing: boolean;
   syncGLPI: () => void;
+  importarCSV: (chamados: Chamado[], clientes: Cliente[]) => void;
   criarCliente: (dados: Omit<Cliente, "id">) => void;
   atualizarCliente: (id: string, patch: Partial<Omit<Cliente, "id">>) => void;
   removerCliente: (id: string) => void;
@@ -190,6 +191,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
       tiposChamado,
       syncing,
       syncGLPI,
+      importarCSV: (novos, novosClientes) => {
+        setChamados((prev) => {
+          const merged = mergeLocalState(novos);
+          // manter chamados locais que não vieram no CSV
+          const novosIds = new Set(merged.map((c) => c.id));
+          const antigos = prev.filter((c) => !novosIds.has(c.id));
+          return [...merged, ...antigos];
+        });
+        setClientes((prev) => {
+          const existIds = new Set(prev.map((c) => c.id));
+          const novas = novosClientes.filter((c) => !existIds.has(c.id));
+          return [...prev, ...novas];
+        });
+      },
       criarCliente: (dados) => {
         const slug = dados.nome
           .toLowerCase()
