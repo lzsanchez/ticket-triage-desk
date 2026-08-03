@@ -31,6 +31,8 @@ type DataContextValue = {
   projetos: Projeto[];
   scripts: Script[];
   tiposChamado: TipoChamado[];
+  syncing: boolean;
+  syncGLPI: () => void;
   criarCliente: (dados: Omit<Cliente, "id">) => void;
   atualizarCliente: (id: string, patch: Partial<Omit<Cliente, "id">>) => void;
   removerCliente: (id: string) => void;
@@ -135,8 +137,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     );
   }, []);
   const [tiposChamado, setTiposChamado] = useState<TipoChamado[]>(tiposIniciais);
+  const [syncing, setSyncing] = useState(false);
 
-  useEffect(() => {
+  const syncGLPI = useCallback(() => {
+    setSyncing(true);
     fetchGLPIData()
       .then(({ chamados: glpiChamados, clientes: glpiClientes }) => {
         setChamados(mergeLocalState(glpiChamados));
@@ -145,8 +149,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         setChamados(mergeLocalState(mockChamados));
         setClientes(mockClientes);
-      });
+      })
+      .finally(() => setSyncing(false));
   }, []);
+
+  useEffect(() => {
+    syncGLPI();
+  }, [syncGLPI]);
 
   useEffect(() => {
     saveLocalProjetos(projetos);
@@ -179,6 +188,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       projetos,
       scripts,
       tiposChamado,
+      syncing,
+      syncGLPI,
       criarCliente: (dados) => {
         const slug = dados.nome
           .toLowerCase()
@@ -504,7 +515,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         );
       },
     }),
-    [chamados, clientes, projetos, scripts, tiposChamado, updateChamado],
+    [chamados, clientes, projetos, scripts, tiposChamado, syncing, syncGLPI, updateChamado],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
